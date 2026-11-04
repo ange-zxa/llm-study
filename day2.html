@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 2｜第4章总结与第5章文本聚类入门</title>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#192238;font:16px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.wrap{max-width:860px;margin:auto;padding:28px 20px 90px}header,section{background:white;border:1px solid #e2e8f0;border-radius:18px;padding:26px 32px;margin-bottom:18px}header{background:linear-gradient(120deg,#eaf2ff,white)}h1{font-size:30px;line-height:1.3;margin:8px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:17px}p{margin:12px 0}small,.muted{color:#64748b}.pill{display:inline-block;color:#1d4ed8;background:#dbeafe;border-radius:20px;padding:2px 10px;font-size:13px}.call{background:#eff6ff;padding:12px 16px;border-left:4px solid #2563eb;border-radius:8px}pre{background:#101827;color:#e2e8f0;padding:16px;border-radius:12px;white-space:pre-wrap;overflow:auto;font-size:13px}code{font-family:ui-monospace,Consolas,monospace}p code{background:#e9eef5;padding:1px 4px;border-radius:4px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e7eb;padding:9px;text-align:left}th{background:#f8fafc}details{border:1px solid #dbe2ea;padding:12px 16px;border-radius:12px;margin:8px 0}summary{cursor:pointer;font-weight:600}mark.note{background:#ffed9d;cursor:pointer}#annotate{display:none;position:fixed;bottom:16px;right:16px;z-index:10;background:#1d4ed8;color:white;border:0;border-radius:10px;padding:10px 15px;cursor:pointer}#editor{display:none;position:fixed;bottom:18px;right:18px;width:min(360px,calc(100vw - 36px));z-index:20;background:white;box-shadow:0 12px 45px #0003;padding:20px;border:1px solid #ddd;border-radius:14px}#editor textarea{width:100%;height:100px;padding:10px;border:1px solid #cbd5e1;border-radius:8px}button{cursor:pointer}#editor button{margin:8px 8px 0 0;padding:6px 12px;border-radius:7px;border:1px solid #cbd5e1}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.toolbar button{background:#fff;border:1px solid #bfd1e8;border-radius:9px;padding:6px 12px}#notes{background:#eff6ff;border-radius:10px;padding:10px;display:none}.noteitem{border-bottom:1px solid #dae2ef;padding:8px 0;white-space:pre-wrap}@media(max-width:600px){header,section{padding:20px}.wrap{padding:14px}}</style></head>
+<body><div class="wrap">
+<header><div class="pill">DAY 2 · 每日学习</div><h1>从 ChatGPT 的消息结构到文本聚类</h1><p>《图解大模型：生成式 AI 原理与实战》 · 第111–116页</p><small>本日包含上次问答补充、第4章小结，以及第5章开篇内容。</small></header>
+<section><h2>01｜复习：prompt 与 messages</h2><p>在书中的 Python 代码中，<b>prompt</b> 是任务模板字符串，而 <b>messages</b> 是带有 role 和 content 的消息列表。它们不是同一层级的数据。</p>
+<pre>prompt = "判断影评：[DOCUMENT]。正面1，负面0。"
+document = "这部电影非常精彩"
+task = prompt.replace("[DOCUMENT]", document)
+
+messages = [
+  {"role": "system", "content": "You are a helpful assistant."},
+  {"role": "user", "content": task}
+]</pre>
+<table><tr><th>元素</th><th>作用</th></tr><tr><td>prompt</td><td>保存可复用的任务指令模板</td></tr><tr><td>document</td><td>此次要分类的实际文本</td></tr><tr><td>system 消息</td><td>说明整体行为要求</td></tr><tr><td>user 消息</td><td>提供具体指令与评论文本</td></tr><tr><td>messages</td><td>把消息组织为一次 API 调用的输入</td></tr></table>
+<p class="call">注意：<code>replace()</code> 只是在程序中替换字符串，并不会联系模型。模型直到收到 <code>client.chat.completions.create(messages=messages,...)</code> 才开始处理请求。</p></section>
+<section><h2>02｜System 与 User：用例对比</h2>
+<p>例子 A：System 规定“回答要简洁”，User 说“这部电影精彩，正面回复1”，模型可能回复 <code>1</code>。</p>
+<p>例子 B：System 规定“用 JSON 输出”，User 仍然提供同一条评论，模型可能回复 <code>{"label":1}</code>。</p>
+<p>模型的行为变化来自本次消息要求，<b>不等于模型权重发生改变或重新训练</b>。在原书第111页，System 只有一句助手身份说明，情感分类的核心任务要求放在 User 中。</p></section>
+<section><h2>03｜第4章小结：四类文本分类方法</h2><small>原书第113页，4.7</small>
+<table><tr><th>模型类别</th><th>方法</th><th>核心思路</th></tr><tr><td>表示模型</td><td>特定任务模型</td><td>直接使用经过分类训练的模型输出标签</td></tr><tr><td>表示模型</td><td>嵌入模型</td><td>先把文本变成向量，再用分类器或标签相似度确定类别</td></tr><tr><td>生成模型</td><td>FLAN-T5</td><td>根据指令生成类别文本</td></tr><tr><td>生成模型</td><td>GPT-3.5</td><td>通过 API 按提示词输出分类标签</td></tr></table>
+<p class="call"><b>第4章的核心问题：</b>已经有“正面/负面”等目标类别，如何将新文本正确分入这些类别？</p></section>
+<section><h2>04｜第5章：文本聚类和主题建模</h2><small>原书第114–115页，图5-1、图5-2</small>
+<p>第5章转向<b>无监督技术</b>：不给每条文档人工标注类别，让算法根据文档的语义内容、含义和关系将相似文本分组。书中用猫、狗；足球、篮球；意面、披萨等文本作为示意。</p>
+<p><b>文本聚类：</b>主要解决“哪些文档在一起？”；<b>主题建模：</b>进一步解决“每一组在讨论什么？”例如把一组动物相关文档命名为“宠物”。</p>
+<p class="call">分类与聚类的区别不是输入能否使用 Transformer，而是<b>监督信息和任务目标</b>不同。第5章将结合嵌入模型、降维和聚类方法。</p></section>
+<section><h2>05｜预习：第5.2节的三个步骤</h2><small>原书第116页，图5-3</small>
+<p>书中介绍的通用流程：<b>① 为文档生成嵌入向量 → ② 对向量降维 → ③ 使用聚类模型分组。</b></p>
+<p>嵌入向量使文本含义可被数值计算；降维有助于后续聚类；聚类寻找语义相近的文档集合。为什么用特定嵌入模型、怎么降维和怎样检查簇，将在后续逐段学习。</p>
+<p>下一次按原书先阅读第5.1节关于 ArXiv 计算与语言文章的数据集，再学习第5.2节的完整流程。</p></section>
+<section><h2>06｜自测</h2>
+<details><summary>为什么 prompt 不是 messages？</summary><p>在这段代码中，prompt 是字符串模板，而 messages 是包含多条带角色消息的列表。prompt 的填充结果被放进其中一条 User 消息。</p></details>
+<details><summary>将 System 的输出格式改变，是否代表模型接受了微调？</summary><p>不是。改变的是当前请求的指令，模型参数没有因此更新。</p></details>
+<details><summary>分类与聚类最关键的区别是什么？</summary><p>分类通常根据已定义的目标类别分配标签，而无监督聚类尝试从无人工类别标签的文本中发现相似组别。</p></details>
+<details><summary>第5.2节通用聚类流程包含哪三个步骤？</summary><p>嵌入文档、对嵌入向量降维、对降维后的向量聚类。</p></details></section>
+<section><h2>个人批注</h2><p class="muted">选中正文中的任意文字，点击“添加批注”；保存到当前浏览器本地。建议定期导出备份。</p><div class="toolbar"><button id="listBtn">查看本页批注</button><button id="exportBtn">导出 JSON</button></div><div id="notes"></div></section>
+<small>原书依据：第111–116页；中文代码示例及解释是教学补充，不属于逐字原文。</small></div>
+<button id="annotate">＋ 添加批注</button><div id="editor"><b>添加批注</b><p id="quote"></p><textarea id="noteInput" placeholder="写下理解或疑问"></textarea><div><button id="saveBtn">保存</button><button id="cancelBtn">取消</button></div></div>
+<script>
+(()=>{
+const key='llm-study-day2-notes-v1',btn=document.getElementById('annotate'),ed=document.getElementById('editor'),notes=document.getElementById('notes');
+let pending=null;
+const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}};
+document.addEventListener('mouseup',e=>{
+ if(e.target.closest('button,#editor,#notes'))return;
+ const sel=window.getSelection();
+ if(!sel||sel.isCollapsed||!sel.toString().trim()){btn.style.display='none';return}
+ const range=sel.getRangeAt(0);if(!document.querySelector('.wrap').contains(range.commonAncestorContainer))return;
+ pending={quote:sel.toString(),time:new Date().toISOString()};
+ btn.style.display='block';
+});
+btn.onclick=()=>{if(!pending)return;document.getElementById('quote').textContent='“'+pending.quote+'”';ed.style.display='block';btn.style.display='none'};
+document.getElementById('cancelBtn').onclick=()=>ed.style.display='none';
+document.getElementById('saveBtn').onclick=()=>{
+ const note=document.getElementById('noteInput').value.trim();if(!note)return;
+ const all=read();all.push({...pending,note});try{localStorage.setItem(key,JSON.stringify(all));}catch(e){alert('保存失败，请尝试导出或检查浏览器存储权限。');return}
+ ed.style.display='none';document.getElementById('noteInput').value='';render();
+};
+function render(){notes.innerHTML='';for(const n of read()){const d=document.createElement('div');d.className='noteitem';d.textContent='“'+n.quote+'”\n'+n.note;notes.appendChild(d)}}
+document.getElementById('listBtn').onclick=()=>{notes.style.display=notes.style.display==='block'?'none':'block';render()};
+document.getElementById('exportBtn').onclick=()=>{
+ const blob=new Blob([JSON.stringify(read(),null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='day2-annotations.json';a.click();URL.revokeObjectURL(u)};
+})();
+</script></body></html>
