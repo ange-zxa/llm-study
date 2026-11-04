@@ -43,7 +43,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
   <div class="group-title">每日学习 · 第 4 章 文本分类</div>
   <div class="nav-list">
     <button class="nav active" data-day="1"><span class="num">01</span><span class="nav-text"><strong>使用 ChatGPT 进行文本分类</strong><small>API、提示词、批量预测</small></span><span class="status">已完成</span></button>
-    <button class="nav" data-day="2"><span class="num">02</span><span class="nav-text"><strong>下一节学习</strong><small>等待继续学习后加入</small></span></button>
+    <button class="nav" data-day="2"><span class="num">02</span><span class="nav-text"><strong>消息结构与文本聚类导读</strong><small>prompt / messages、第4章小结、第5章导读</small></span><span class="status">已完成</span></button>
     <button class="nav" data-day="3"><span class="num">03</span><span class="nav-text"><strong>后续学习</strong><small>等待继续学习后加入</small></span></button>
   </div>
   <div class="group-title">后续章节</div>
@@ -404,18 +404,32 @@ window.StudyNotes={
   }
 };
 document.getElementById('sidebarToggle').addEventListener('click',()=>document.querySelector('.app').classList.toggle('sidebar-collapsed'));
-document.getElementById('openNotes').addEventListener('click',()=>StudyNotes.open());
+document.getElementById('openNotes').addEventListener('click',()=>{if(activeDay()==='2'){frame.contentWindow?.document.getElementById('notes')?.scrollIntoView({behavior:'smooth',block:'center'});}else StudyNotes.open()});
 document.getElementById('closeNotes').addEventListener('click',()=>StudyNotes.close());
 document.getElementById('notesPanel').addEventListener('click',e=>{if(e.target.id==='notesPanel')StudyNotes.close()});
 document.getElementById('exportNotes').addEventListener('click',()=>{
   const data=StudyNotes.getAnnotations(activeDay());const blob=new Blob([JSON.stringify({day:activeDay(),annotations:data},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='day-'+activeDay()+'-annotations.json';a.click();URL.revokeObjectURL(url);
 });
 document.getElementById('clearNotes').addEventListener('click',()=>{if(!confirm('确定清空当前学习日的全部批注吗？此操作无法撤销。'))return;const data=readStore();data[activeDay()]=[];writeStore(data);StudyNotes.render();if(frame.contentWindow.refreshAnnotations)frame.contentWindow.refreshAnnotations()});
+const day1Srcdoc=frame.getAttribute('srcdoc');
 function loadDay(d){
   document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));
   const btn=document.querySelector('.nav[data-day="'+d+'"]');if(btn)btn.classList.add('active');
-  if(d==='1'){frame.style.display='block';empty.style.display='none';crumb.textContent='学习笔记 / Day 1 / 使用 ChatGPT 进行文本分类';}
-  else{frame.style.display='none';empty.style.display='flex';document.getElementById('emptyTitle').textContent='Day '+d+' · 内容待更新';document.getElementById('emptyDesc').textContent='这一天的学习内容尚未整理。你继续学习并提问后，我会把对应笔记添加到这个总网站中，保持每天一个可点击的独立页面。';crumb.textContent='学习笔记 / Day '+d+' / 待更新';}
+  if(d==='1'){
+    frame.style.display='block';empty.style.display='none';
+    frame.removeAttribute('src');frame.setAttribute('srcdoc',day1Srcdoc);
+    crumb.textContent='学习笔记 / Day 1 / 使用 ChatGPT 进行文本分类';
+  }else if(d==='2'){
+    frame.style.display='block';empty.style.display='none';
+    frame.removeAttribute('srcdoc');frame.src='day2.html';
+    crumb.textContent='学习笔记 / Day 2 / 消息结构与文本聚类导读';
+  }else{
+    frame.style.display='none';empty.style.display='flex';
+    document.getElementById('emptyTitle').textContent='Day '+d+' · 内容待更新';
+    document.getElementById('emptyDesc').textContent='这一天的学习内容尚未整理。继续学习后将加入对应笔记。';
+    crumb.textContent='学习笔记 / Day '+d+' / 待更新';
+  }
+  document.getElementById('openNotes').textContent=d==='2'?'批注：正文底部':'批注（'+StudyNotes.getAnnotations('1').length+'）';
   StudyNotes.refreshCount();
 }
 document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>loadDay(btn.dataset.day)));
