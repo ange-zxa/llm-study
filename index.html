@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图解大模型｜每日学习网站</title>
+<style>
+:root{--bg:#f4f6fb;--panel:#fff;--ink:#172033;--muted:#667085;--line:#e5eaf2;--blue:#2563eb;--blue-soft:#eff6ff;--shadow:0 10px 30px rgba(15,23,42,.06)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg)}
+.app{height:100vh;display:grid;grid-template-columns:290px minmax(0,1fr)}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:24px 18px;overflow:auto}
+.brand{padding:8px 10px 22px;border-bottom:1px solid var(--line)}.eyebrow{font-size:11px;letter-spacing:.12em;color:var(--blue);font-weight:800}.brand h1{font-size:21px;line-height:1.35;margin:8px 0}.brand p{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
+.progress{margin:18px 8px 22px;padding:14px;border:1px solid #dbeafe;background:var(--blue-soft);border-radius:14px}.progress-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700}.bar{height:6px;border-radius:99px;background:#dbeafe;margin-top:10px;overflow:hidden}.bar span{display:block;width:8.33%;height:100%;background:var(--blue);border-radius:99px}
+.group-title{margin:20px 10px 8px;color:#98a2b3;font-size:11px;font-weight:800;letter-spacing:.08em}.nav{display:flex;align-items:flex-start;gap:11px;text-decoration:none;color:#475467;padding:11px 10px;margin:3px 0;border-radius:11px;border:1px solid transparent;cursor:pointer;width:100%;text-align:left;background:transparent;font:inherit}.nav:hover{background:#f8fafc}.nav.active{background:var(--blue-soft);border-color:#dbeafe;color:#1d4ed8}.num{flex:0 0 29px;height:29px;border-radius:9px;background:#f2f4f7;display:grid;place-items:center;font-size:11px;font-weight:800;color:#667085}.active .num{background:#dbeafe;color:#1d4ed8}.nav-text{min-width:0;flex:1}.nav-text strong{display:block;font-size:13px;line-height:1.45}.nav-text small{display:block;font-size:11px;color:#98a2b3;margin-top:3px}.status{font-size:10px;color:#15803d;background:#dcfce7;padding:3px 6px;border-radius:99px;white-space:nowrap}
+main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:58px;flex:0 0 58px;background:rgba(255,255,255,.9);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:12px}.crumb{font-size:13px;color:var(--muted)}.top-actions{display:flex;gap:8px}.top-actions a{font-size:12px;color:#344054;text-decoration:none;border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:#fff}.viewer{flex:1;min-height:0;position:relative}iframe{width:100%;height:100%;border:0;background:#f5f7fb}.empty{height:100%;display:none;align-items:center;justify-content:center;padding:30px}.empty-card{max-width:520px;background:white;border:1px solid var(--line);border-radius:22px;padding:34px;box-shadow:var(--shadow);text-align:center}.empty-card .big{font-size:38px}.empty-card h2{margin:12px 0 8px;font-size:22px}.empty-card p{color:var(--muted);line-height:1.8;font-size:14px}.mobile-menu{display:none}
+@media(max-width:820px){.app{grid-template-columns:1fr}aside{height:auto;max-height:42vh;border-right:0;border-bottom:1px solid var(--line);padding:12px 14px}.brand{padding:6px 6px 12px}.brand h1{font-size:18px;margin:5px 0}.progress{margin:10px 4px}.group-title{margin-top:12px}.nav-list{display:grid;grid-template-columns:1fr 1fr;gap:2px}.nav{padding:8px 6px}.nav-text strong{font-size:12px}main{height:58vh;min-height:400px}.topbar{height:48px;flex-basis:48px;padding:0 12px}.top-actions a{padding:6px 8px}}
+
+.app{transition:grid-template-columns .22s ease}.app.sidebar-collapsed{grid-template-columns:0 minmax(0,1fr)}
+.app.sidebar-collapsed aside{padding-left:0;padding-right:0;border-right:0;overflow:hidden;visibility:hidden}
+.topbar .left-actions{display:flex;align-items:center;gap:10px;min-width:0}
+.topbar button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:#344054;border-radius:9px;padding:7px 10px;font-size:12px;white-space:nowrap}
+.topbar button:hover{background:#f8fafc}
+#notesPanel{position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.28);display:none;justify-content:flex-end}
+#notesPanel.open{display:flex}
+.notes-drawer{height:100%;width:min(430px,100vw);background:#fff;box-shadow:-12px 0 40px rgba(15,23,42,.16);display:flex;flex-direction:column}
+.notes-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.notes-head h2{font-size:17px;margin:0}.notes-head button{border:0;background:transparent;font-size:24px;cursor:pointer;color:#667085}
+.notes-body{padding:14px 16px;overflow:auto;flex:1}.note-item{border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:10px;background:#fff}
+.note-item .quote{font-size:12px;color:#667085;background:#f8fafc;border-radius:8px;padding:8px;margin:0 0 9px;max-height:70px;overflow:auto}
+.note-item .body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.65}
+.note-item .meta{font-size:11px;color:#98a2b3;margin-top:9px}.note-item .actions{display:flex;gap:8px;margin-top:10px}
+.note-item button,.notes-tools button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer;color:#344054}
+.note-item button.jump{color:#1d4ed8;border-color:#bfdbfe;background:#eff6ff}
+.notes-tools{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.empty-notes{padding:30px 12px;text-align:center;color:#98a2b3;font-size:13px;line-height:1.8}
+@media(max-width:820px){.app{grid-template-columns:1fr}.app.sidebar-collapsed{grid-template-columns:1fr}aside{transition:max-height .2s,padding .2s}.app.sidebar-collapsed aside{display:none}main{height:100vh;min-height:0}.topbar{height:54px;flex-basis:54px}.crumb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+</style></head>
+<body>
+<div class="app">
+<aside>
+  <div class="brand"><div class="eyebrow">PERSONAL STUDY LIBRARY</div><h1>图解大模型<br>每日学习网站</h1><p>以《图解大模型：生成式 AI 原理与实战》为主线，按天整理原文、讲解、代码与练习。</p></div>
+  <div class="progress"><div class="progress-top"><span>学习资料收录</span><span>1 / 12 章</span></div><div class="bar"><span></span></div><div style="font-size:11px;color:#667085;margin-top:8px">已建立 Day 1；后续学习笔记会持续加入此目录。</div></div>
+  <div class="group-title">每日学习 · 第 4 章 文本分类</div>
+  <div class="nav-list">
+    <button class="nav active" data-day="1"><span class="num">01</span><span class="nav-text"><strong>使用 ChatGPT 进行文本分类</strong><small>API、提示词、批量预测</small></span><span class="status">已完成</span></button>
+    <button class="nav" data-day="2"><span class="num">02</span><span class="nav-text"><strong>下一节学习</strong><small>等待继续学习后加入</small></span></button>
+    <button class="nav" data-day="3"><span class="num">03</span><span class="nav-text"><strong>后续学习</strong><small>等待继续学习后加入</small></span></button>
+  </div>
+  <div class="group-title">后续章节</div>
+  <div class="nav-list">
+    <button class="nav" data-day="5"><span class="num">05</span><span class="nav-text"><strong>文本聚类和主题建模</strong><small>第 5 章 · 待学习</small></span></button>
+    <button class="nav" data-day="6"><span class="num">06</span><span class="nav-text"><strong>提示工程</strong><small>第 6 章 · 待学习</small></span></button>
+    <button class="nav" data-day="7"><span class="num">07</span><span class="nav-text"><strong>高级文本生成技术与工具</strong><small>第 7 章 · 待学习</small></span></button>
+    <button class="nav" data-day="8"><span class="num">08</span><span class="nav-text"><strong>语义搜索与 RAG</strong><small>第 8 章 · 待学习</small></span></button>
+    <button class="nav" data-day="9"><span class="num">09</span><span class="nav-text"><strong>多模态 LLM</strong><small>第 9 章 · 待学习</small></span></button>
+    <button class="nav" data-day="10"><span class="num">10</span><span class="nav-text"><strong>构建文本嵌入模型</strong><small>第 10 章 · 待学习</small></span></button>
+    <button class="nav" data-day="11"><span class="num">11</span><span class="nav-text"><strong>微调表示模型</strong><small>第 11 章 · 待学习</small></span></button>
+    <button class="nav" data-day="12"><span class="num">12</span><span class="nav-text"><strong>微调生成模型</strong><small>第 12 章 · 待学习</small></span></button>
+  </div>
+</aside>
+<main>
+  <div class="topbar"><div class="left-actions"><button id="sidebarToggle" type="button" aria-label="收起或展开目录">☰ 目录</button><div class="crumb" id="crumb">学习笔记 / Day 1 / 使用 ChatGPT 进行文本分类</div></div><div class="top-actions"><button id="openNotes" type="button">批注（<span id="noteCount">0</span>）</button><a href="javascript:window.print()">打印 / 保存 PDF</a></div></div>
+  <div class="viewer" id="viewer">
+    <iframe id="noteFrame" title="Day 1 学习笔记" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;title&gt;每日学习笔记 Day 1｜使用 ChatGPT 进行文本分类&lt;/title&gt;
+&lt;style&gt;
+:root{--bg:#f5f7fb;--paper:#fff;--ink:#172033;--muted:#64748b;--line:#e5eaf2;--blue:#2563eb;--bluebg:#eff6ff;--green:#15803d;--greenbg:#f0fdf4;--amber:#a16207;--amberbg:#fffbeb;--code:#111827;--shadow:0 12px 32px rgba(15,23,42,.06)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.8 -apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:34px 22px 72px}.hero{background:linear-gradient(135deg,#eff6ff,#fff 65%);border:1px solid #dbeafe;border-radius:24px;padding:34px 38px;box-shadow:var(--shadow)}.eyebrow{font-size:13px;letter-spacing:.08em;color:var(--blue);font-weight:700}.hero h1{font-size:clamp(28px,4vw,40px);line-height:1.25;margin:12px 0}.sub{color:var(--muted);margin:0}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.pill{font-size:13px;padding:5px 11px;border-radius:999px;background:#fff;border:1px solid var(--line);color:#475569}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:24px;margin-top:24px}.toc{position:sticky;top:18px;align-self:start;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}.toc strong{display:block;margin-bottom:10px}.toc a{display:block;text-decoration:none;color:#475569;font-size:14px;padding:6px 0}.toc a:hover{color:var(--blue)}main{min-width:0}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow)}h2{font-size:23px;margin:0 0 14px;line-height:1.4}h3{font-size:18px;margin:22px 0 8px}p{margin:10px 0}ul,ol{padding-left:1.4em}li{margin:5px 0}.muted{color:var(--muted)}.small{font-size:13px;color:var(--muted)}.callout{padding:15px 17px;border-radius:12px;background:var(--bluebg);border-left:4px solid var(--blue);margin:14px 0}.good{background:var(--greenbg);border-left-color:var(--green)}.warn{background:var(--amberbg);border-left-color:#d97706}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mini{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}.mini h3{margin:0 0 6px}.tag{font-size:12px;font-weight:700;color:var(--blue)}pre{background:var(--code);color:#e5e7eb;padding:18px;border-radius:13px;overflow:auto;font-size:13px;line-height:1.65;margin:12px 0}code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}p code,li code{background:#f1f5f9;color:#0f172a;padding:2px 5px;border-radius:5px}table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}th{background:#f8fafc;color:#334155}.flow{display:flex;align-items:stretch;gap:9px;flex-wrap:wrap;margin:16px 0}.step{flex:1 1 130px;border:1px solid var(--line);border-radius:12px;padding:13px;text-align:center;background:#fff}.arrow{align-self:center;color:#94a3b8;font-size:22px}.qa{border:1px solid var(--line);border-radius:12px;padding:15px;margin:10px 0}.qa summary{cursor:pointer;font-weight:650}.answer{color:#475569;margin-top:9px}.footer{color:var(--muted);font-size:13px;text-align:center;padding:22px}.btn{display:inline-block;text-decoration:none;border:1px solid #bfdbfe;color:#1d4ed8;background:#eff6ff;padding:8px 13px;border-radius:9px;font-size:13px}@media(max-width:800px){.layout{grid-template-columns:1fr}.toc{position:static}.grid2{grid-template-columns:1fr}.hero{padding:26px 22px}.card{padding:21px 19px}.arrow{display:none}}@media print{body{background:#fff}.wrap{max-width:none;padding:0}.hero,.card,.toc{box-shadow:none}.layout{display:block}.toc{display:none}.card{break-inside:avoid}.hero{margin-bottom:18px}.btn{display:none}}
+
+/* Inline annotations */
+.annotation-highlight{background:#fff0a8;color:inherit;border-radius:3px;box-shadow:0 0 0 1px rgba(202,138,4,.18);cursor:pointer;padding:1px 0}
+.annotation-highlight:hover{background:#ffe27a}
+.annotation-ui{font:14px/1.5 -apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;color:#172033}
+#annotationAction{position:fixed;z-index:99999;display:none;border:0;border-radius:999px;padding:9px 14px;background:#1d4ed8;color:#fff;box-shadow:0 8px 24px rgba(15,23,42,.2);font-weight:700;cursor:pointer}
+#annotationEditor,#annotationBubble{position:fixed;z-index:99998;display:none;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));background:#fff;border:1px solid #dbe3ef;border-radius:16px;padding:15px;box-shadow:0 16px 45px rgba(15,23,42,.2)}
+#annotationEditor h3,#annotationBubble h3{font-size:15px;margin:0 0 8px}
+#annotationEditor textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #d0d5dd;border-radius:10px;padding:10px;font:14px/1.6 inherit;outline:none}
+#annotationEditor textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px #dbeafe}
+.annotation-buttons{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.annotation-buttons button{border:1px solid #d0d5dd;background:#fff;border-radius:9px;padding:7px 11px;cursor:pointer;font:inherit}
+.annotation-buttons .primary{background:#2563eb;border-color:#2563eb;color:#fff}
+#annotationBubble .quote{font-size:12px;color:#64748b;background:#f8fafc;padding:8px;border-radius:8px;margin:8px 0;max-height:72px;overflow:auto}
+#annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
+
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;wrap&quot;&gt;
+&lt;header class=&quot;hero&quot;&gt;
+  &lt;div class=&quot;eyebrow&quot;&gt;DAILY STUDY NOTE · DAY 1&lt;/div&gt;
+  &lt;h1&gt;使用 ChatGPT 进行文本分类&lt;/h1&gt;
+  &lt;p class=&quot;sub&quot;&gt;《图解大模型：生成式 AI 原理与实战》｜第 4 章 4.6.2｜从 API 客户端到批量分类&lt;/p&gt;
+  &lt;div class=&quot;meta&quot;&gt;&lt;span class=&quot;pill&quot;&gt;原书第 111–112 页&lt;/span&gt;&lt;span class=&quot;pill&quot;&gt;预计 30–40 分钟&lt;/span&gt;&lt;span class=&quot;pill&quot;&gt;当前进度：从 API 代码开始&lt;/span&gt;&lt;/div&gt;
+&lt;/header&gt;
+&lt;div class=&quot;layout&quot;&gt;
+&lt;nav class=&quot;toc&quot;&gt;
+  &lt;strong&gt;本页目录&lt;/strong&gt;
+  &lt;a href=&quot;#goal&quot;&gt;01 学习目标&lt;/a&gt;&lt;a href=&quot;#api&quot;&gt;02 API 是什么&lt;/a&gt;&lt;a href=&quot;#client&quot;&gt;03 创建客户端&lt;/a&gt;&lt;a href=&quot;#function&quot;&gt;04 封装生成函数&lt;/a&gt;&lt;a href=&quot;#messages&quot;&gt;05 messages 与角色结构&lt;/a&gt;&lt;a href=&quot;#prompt&quot;&gt;06 分类提示词模板&lt;/a&gt;&lt;a href=&quot;#batch&quot;&gt;07 批量预测&lt;/a&gt;&lt;a href=&quot;#evaluate&quot;&gt;08 提取标签与评估&lt;/a&gt;&lt;a href=&quot;#cautions&quot;&gt;09 成本与限制&lt;/a&gt;&lt;a href=&quot;#summary&quot;&gt;10 全流程总结&lt;/a&gt;&lt;a href=&quot;#check&quot;&gt;11 自测&lt;/a&gt;
+&lt;/nav&gt;
+&lt;main&gt;
+&lt;section class=&quot;card&quot; id=&quot;goal&quot;&gt;
+&lt;h2&gt;01｜今天的学习目标&lt;/h2&gt;
+&lt;p&gt;从你当前截图的位置开始，理解书中如何通过 OpenAI API 调用 GPT 模型，对电影评论进行正面/负面分类。&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;理解 API 调用与本地加载模型的区别。&lt;/li&gt;&lt;li&gt;看懂客户端、提示词模板和消息列表。&lt;/li&gt;&lt;li&gt;理解模型如何返回分类标签。&lt;/li&gt;&lt;li&gt;理解如何批量处理测试集，并评估分类结果。&lt;/li&gt;&lt;/ul&gt;
+&lt;div class=&quot;callout&quot;&gt;&lt;b&gt;本节核心：&lt;/b&gt;这里不是重新训练 GPT-3.5，而是通过 API 把待分类文本和任务指令发送给已经部署好的模型，让它直接生成分类标签。&lt;/div&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;api&quot;&gt;
+&lt;h2&gt;02｜API 是什么？&lt;/h2&gt;
+&lt;p&gt;API（应用程序编程接口）可以理解为程序访问某项服务的入口。书中这一节通过 API 使用 GPT-3.5，不需要把 GPT-3.5 的模型权重下载到自己的电脑上。&lt;/p&gt;
+&lt;div class=&quot;grid2&quot;&gt;
+ &lt;div class=&quot;mini&quot;&gt;&lt;div class=&quot;tag&quot;&gt;本地加载开源模型&lt;/div&gt;&lt;h3&gt;模型在本地运行&lt;/h3&gt;&lt;p class=&quot;muted&quot;&gt;下载模型权重，由本地硬件执行推理。&lt;/p&gt;&lt;/div&gt;
+ &lt;div class=&quot;mini&quot;&gt;&lt;div class=&quot;tag&quot;&gt;通过 API 使用模型&lt;/div&gt;&lt;h3&gt;模型在远程服务器运行&lt;/h3&gt;&lt;p class=&quot;muted&quot;&gt;本地程序发送请求，远程服务运行模型，再把结果返回。&lt;/p&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;callout good&quot;&gt;&lt;b&gt;记忆：&lt;/b&gt;API 的作用是让你的程序能够调用远程模型服务；它本身不是模型，也不负责训练模型。&lt;/div&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;client&quot;&gt;
+&lt;h2&gt;03｜创建 API 客户端&lt;/h2&gt;
+&lt;p&gt;原书代码：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;import openai
+
+# 创建客户端
+client = openai.OpenAI(api_key=&quot;YOUR_KEY_HERE&quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;import openai&lt;/code&gt;：导入 OpenAI 的 Python SDK（软件开发工具包）。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;openai.OpenAI(...)&lt;/code&gt;：创建客户端对象，后续通过它发送 API 请求。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;api_key&lt;/code&gt;：API 密钥，用于请求身份验证。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;YOUR_KEY_HERE&lt;/code&gt;：示例占位符，实际运行时应换成自己的密钥。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&quot;callout warn&quot;&gt;&lt;b&gt;安全提醒：&lt;/b&gt;API Key 相当于访问凭证，不要把真实密钥贴到聊天、公开代码仓库或网页前端。实际项目中建议通过环境变量读取。&lt;/div&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;function&quot;&gt;
+&lt;h2&gt;04｜封装 chatgpt_generation 函数&lt;/h2&gt;
+&lt;p&gt;书中把 API 调用封装成函数。这样每次只需要传入提示词和待分类文本，就能获得模型输出。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;def chatgpt_generation(prompt, document, model=&quot;gpt-3.5-turbo-0125&quot;):
+    &quot;&quot;&quot;基于提示词和输入文档生成输出&quot;&quot;&quot;
+    messages = [
+        {
+            &quot;role&quot;: &quot;system&quot;,
+            &quot;content&quot;: &quot;You are a helpful assistant.&quot;
+        },
+        {
+            &quot;role&quot;: &quot;user&quot;,
+            &quot;content&quot;: prompt.replace(&quot;[DOCUMENT]&quot;, document)
+        }
+    ]
+    chat_completion = client.chat.completions.create(
+        messages=messages,
+        model=model,
+        temperature=0
+    )
+    return chat_completion.choices[0].message.content&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;函数的三个参数&lt;/h3&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;参数&lt;/th&gt;&lt;th&gt;含义&lt;/th&gt;&lt;th&gt;例子&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;&lt;code&gt;prompt&lt;/code&gt;&lt;/td&gt;&lt;td&gt;任务提示词模板&lt;/td&gt;&lt;td&gt;判断评论正面还是负面&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;code&gt;document&lt;/code&gt;&lt;/td&gt;&lt;td&gt;实际待分类文本&lt;/td&gt;&lt;td&gt;这部电影非常精彩&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;code&gt;model&lt;/code&gt;&lt;/td&gt;&lt;td&gt;指定调用的模型&lt;/td&gt;&lt;td&gt;书中的历史示例模型&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;h3&gt;替换占位符&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;prompt.replace(&quot;[DOCUMENT]&quot;, document)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;假设提示词模板中有 &lt;code&gt;[DOCUMENT]&lt;/code&gt;，实际文本是“这部电影非常精彩”。执行 &lt;code&gt;replace()&lt;/code&gt; 后，占位符就会被实际评论替换。&lt;/p&gt;
+&lt;div class=&quot;callout&quot;&gt;提示词模板可以重复使用；每次调用函数时，只需要换入不同的 &lt;code&gt;document&lt;/code&gt;。&lt;/div&gt;
+&lt;h3&gt;发送请求并取回文本&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;chat_completion = client.chat.completions.create(
+    messages=messages,
+    model=model,
+    temperature=0
+)
+
+return chat_completion.choices[0].message.content&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;messages&lt;/code&gt;：发送给模型的消息列表。&lt;/li&gt;&lt;li&gt;&lt;code&gt;model&lt;/code&gt;：指定模型。&lt;/li&gt;&lt;li&gt;&lt;code&gt;temperature=0&lt;/code&gt;：降低采样随机性，使输出通常更稳定；不应理解为任何情况下都绝对确定。&lt;/li&gt;&lt;li&gt;&lt;code&gt;choices[0].message.content&lt;/code&gt;：从 API 响应中取出第一个候选回答的文本内容。&lt;/li&gt;&lt;/ul&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;messages&quot;&gt;
+&lt;h2&gt;05｜messages：System 和 User 是什么？&lt;/h2&gt;
+&lt;p&gt;你刚才问到“提示词结构”是什么意思。这里的结构指的是：发送给模型的消息可以带有不同角色，用来区分总体行为要求和当前任务。&lt;/p&gt;
+&lt;div class=&quot;grid2&quot;&gt;
+ &lt;div class=&quot;mini&quot;&gt;&lt;div class=&quot;tag&quot;&gt;SYSTEM · 系统消息&lt;/div&gt;&lt;h3&gt;设定整体行为&lt;/h3&gt;&lt;p&gt;例如：&lt;code&gt;You are a helpful assistant.&lt;/code&gt;&lt;/p&gt;&lt;p class=&quot;muted&quot;&gt;告诉模型总体上应以怎样的助手身份回应。&lt;/p&gt;&lt;/div&gt;
+ &lt;div class=&quot;mini&quot;&gt;&lt;div class=&quot;tag&quot;&gt;USER · 用户消息&lt;/div&gt;&lt;h3&gt;提供具体任务&lt;/h3&gt;&lt;p&gt;例如：判断下面这条电影评论是正面还是负面，并按要求输出标签。&lt;/p&gt;&lt;p class=&quot;muted&quot;&gt;告诉模型这一次具体要做什么，并提供待处理文本。&lt;/p&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;flow&quot;&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;System&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;总体行为要求&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;+&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;User&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;具体任务与文本&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;模型&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;生成回答&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;callout good&quot;&gt;&lt;b&gt;关键区别：&lt;/b&gt;&lt;code&gt;messages&lt;/code&gt; 是发送给模型的消息列表；&lt;code&gt;prompt&lt;/code&gt; 是程序中定义的任务提示词模板。二者不是同一个东西。书中代码把 system 和 user 两条消息放进 &lt;code&gt;messages&lt;/code&gt;。&lt;/div&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;prompt&quot;&gt;
+&lt;h2&gt;06｜创建分类提示词模板&lt;/h2&gt;
+&lt;p&gt;原书要求模型完成一个二分类任务：判断输入文档是正面电影评论还是负面电影评论。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;prompt = &quot;&quot;&quot;Predict whether the following document is a positive or negative
+movie review:
+
+[DOCUMENT]
+
+If it is positive return 1 and if it is negative return 0. Do not give any
+other answers.
+&quot;&quot;&quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;模型输出&lt;/th&gt;&lt;th&gt;标签含义&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;&lt;code&gt;1&lt;/code&gt;&lt;/td&gt;&lt;td&gt;Positive review（正面评论）&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;&lt;td&gt;Negative review（负面评论）&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;p&gt;书中的示例输入：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;document = &quot;unpretentious , charming , quirky , original&quot;
+chatgpt_generation(prompt, document)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这几个词大致表示：朴实、不矫饰；有魅力；古怪而有趣；独特、有创意。模型根据这些文本判断情感倾向。&lt;/p&gt;
+&lt;div class=&quot;callout warn&quot;&gt;&lt;b&gt;为什么限制只输出 0 或 1？&lt;/b&gt;因为后续程序会执行 &lt;code&gt;int(pred)&lt;/code&gt;。如果模型返回一整句解释文字，就不能直接转换成整数。因此提示词要明确规定输出格式。&lt;/div&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;batch&quot;&gt;
+&lt;h2&gt;07｜对测试集批量预测&lt;/h2&gt;
+&lt;p&gt;当函数和提示词准备好后，就可以遍历测试集中的文本，逐条调用模型。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;predictions = [
+    chatgpt_generation(prompt, doc)
+    for doc in tqdm(data[&quot;test&quot;][&quot;text&quot;])
+]&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;data[&quot;test&quot;][&quot;text&quot;]&lt;/code&gt;：测试集中的文本内容。&lt;/li&gt;&lt;li&gt;&lt;code&gt;for doc in ...&lt;/code&gt;：逐条取出一篇评论。&lt;/li&gt;&lt;li&gt;&lt;code&gt;chatgpt_generation(prompt, doc)&lt;/code&gt;：把当前评论传给 GPT 分类。&lt;/li&gt;&lt;li&gt;&lt;code&gt;tqdm(...)&lt;/code&gt;：显示遍历进度。&lt;/li&gt;&lt;li&gt;&lt;code&gt;predictions&lt;/code&gt;：保存每条评论对应的模型输出。&lt;/li&gt;&lt;/ul&gt;
+&lt;div class=&quot;flow&quot;&gt;&lt;div class=&quot;step&quot;&gt;测试集第 1 条评论&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;调用 GPT 得到标签&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;保存到 predictions&lt;/div&gt;&lt;/div&gt;
+&lt;p class=&quot;muted&quot;&gt;列表推导式会对测试集中的每条文本执行一次函数调用。书中的代码不是把整个测试集作为一个请求一次性发送。&lt;/p&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;evaluate&quot;&gt;
+&lt;h2&gt;08｜提取标签并评估性能&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;# 提取预测结果
+y_pred = [int(pred) for pred in predictions]
+
+# 评估性能
+evaluate_performance(data[&quot;test&quot;][&quot;label&quot;], y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;predictions&lt;/code&gt; 保存模型返回的字符串，例如 &lt;code&gt;[&quot;0&quot;, &quot;1&quot;, &quot;0&quot;]&lt;/code&gt;。&lt;/li&gt;&lt;li&gt;&lt;code&gt;int(pred)&lt;/code&gt; 把字符串标签转成整数，例如 &lt;code&gt;[0, 1, 0]&lt;/code&gt;。&lt;/li&gt;&lt;li&gt;&lt;code&gt;data[&quot;test&quot;][&quot;label&quot;]&lt;/code&gt; 是测试集真实标签。&lt;/li&gt;&lt;li&gt;&lt;code&gt;y_pred&lt;/code&gt; 是模型预测标签。&lt;/li&gt;&lt;li&gt;评估函数比较真实标签与预测标签，计算分类指标。&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;书中的 GPT-3.5 结果&lt;/h3&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;类别&lt;/th&gt;&lt;th&gt;Precision&lt;/th&gt;&lt;th&gt;Recall&lt;/th&gt;&lt;th&gt;F1-score&lt;/th&gt;&lt;th&gt;Support&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;Negative review&lt;/td&gt;&lt;td&gt;0.87&lt;/td&gt;&lt;td&gt;0.97&lt;/td&gt;&lt;td&gt;0.92&lt;/td&gt;&lt;td&gt;533&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Positive review&lt;/td&gt;&lt;td&gt;0.96&lt;/td&gt;&lt;td&gt;0.86&lt;/td&gt;&lt;td&gt;0.91&lt;/td&gt;&lt;td&gt;533&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Accuracy&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;td&gt;—&lt;/td&gt;&lt;td&gt;0.91&lt;/td&gt;&lt;td&gt;1066&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Macro avg&lt;/td&gt;&lt;td&gt;0.92&lt;/td&gt;&lt;td&gt;0.91&lt;/td&gt;&lt;td&gt;0.91&lt;/td&gt;&lt;td&gt;1066&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Weighted avg&lt;/td&gt;&lt;td&gt;0.92&lt;/td&gt;&lt;td&gt;0.91&lt;/td&gt;&lt;td&gt;0.91&lt;/td&gt;&lt;td&gt;1066&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+&lt;p&gt;这张报告是本节实验的评估结果。Precision、Recall、F1-score、Accuracy 的具体含义可以单独作为下一份笔记继续深入学习。&lt;/p&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;cautions&quot;&gt;
+&lt;h2&gt;09｜API 使用成本与速率限制&lt;/h2&gt;
+&lt;p&gt;书中提醒：大量调用外部 API 可能增加费用，也可能触发速率限制（Rate Limit）。书中提到的应对思路之一是指数退避（Exponential Backoff）：请求失败后等待一段时间再重试，连续失败时逐渐延长等待时间。&lt;/p&gt;
+&lt;div class=&quot;flow&quot;&gt;&lt;div class=&quot;step&quot;&gt;第 1 次失败&lt;br&gt;&lt;b&gt;等待 1 秒&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;第 2 次失败&lt;br&gt;&lt;b&gt;等待 2 秒&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;第 3 次失败&lt;br&gt;&lt;b&gt;等待 4 秒&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;第 4 次失败&lt;br&gt;&lt;b&gt;等待 8 秒&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p class=&quot;small&quot;&gt;以上等待时间仅为帮助理解的示意值，不是书中规定的固定参数。&lt;/p&gt;
+&lt;div class=&quot;callout warn&quot;&gt;&lt;b&gt;版本提示：&lt;/b&gt;书中示例使用 &lt;code&gt;gpt-3.5-turbo-0125&lt;/code&gt;。书中译者注已说明该模型属于历史示例。当前学习重点是理解 API 调用机制，不要把旧模型名称当成今天一定可用的推荐型号。&lt;/div&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;summary&quot;&gt;
+&lt;h2&gt;10｜整节流程总结&lt;/h2&gt;
+&lt;div class=&quot;flow&quot;&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;创建客户端&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;API Key&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;封装函数&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;prompt + document&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;组织消息&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;system + user&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;调用模型&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;生成 0 / 1&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;flow&quot;&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;批量预测&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;遍历测试集&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;转换标签&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;字符串 → 整数&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;arrow&quot;&gt;→&lt;/div&gt;&lt;div class=&quot;step&quot;&gt;&lt;b&gt;性能评估&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;small&quot;&gt;与真实标签比较&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;callout good&quot;&gt;&lt;b&gt;一句话记忆：&lt;/b&gt;用提示词规定分类任务和输出格式，通过 API 把每条评论发送给模型，收集 0/1 预测标签，再与测试集真实标签比较，得到分类性能。&lt;/div&gt;
+&lt;/section&gt;
+&lt;section class=&quot;card&quot; id=&quot;check&quot;&gt;
+&lt;h2&gt;11｜自测&lt;/h2&gt;
+&lt;p class=&quot;muted&quot;&gt;点击题目展开答案。建议先自己回答，再查看解析。&lt;/p&gt;
+&lt;details class=&quot;qa&quot;&gt;&lt;summary&gt;1. 创建 client 的主要目的是什么？&lt;/summary&gt;&lt;div class=&quot;answer&quot;&gt;建立调用远程模型 API 的客户端。它不负责在本地加载 GPT-3.5 权重，也不负责训练模型。&lt;/div&gt;&lt;/details&gt;
+&lt;details class=&quot;qa&quot;&gt;&lt;summary&gt;2. prompt.replace(&quot;[DOCUMENT]&quot;, document) 做了什么？&lt;/summary&gt;&lt;div class=&quot;answer&quot;&gt;把提示词模板中的占位符 [DOCUMENT] 替换成当前实际需要分类的文本。&lt;/div&gt;&lt;/details&gt;
+&lt;details class=&quot;qa&quot;&gt;&lt;summary&gt;3. System 和 User 消息分别承担什么作用？&lt;/summary&gt;&lt;div class=&quot;answer&quot;&gt;System 用于设定整体行为要求；User 用于提供当前具体任务和输入文本。&lt;/div&gt;&lt;/details&gt;
+&lt;details class=&quot;qa&quot;&gt;&lt;summary&gt;4. 为什么要求模型只返回 0 或 1？&lt;/summary&gt;&lt;div class=&quot;answer&quot;&gt;因为后续要用 int(pred) 将输出转换为整数标签。如果模型返回一整句解释，就无法直接转换。&lt;/div&gt;&lt;/details&gt;
+&lt;details class=&quot;qa&quot;&gt;&lt;summary&gt;5. 批量预测代码是如何处理测试集的？&lt;/summary&gt;&lt;div class=&quot;answer&quot;&gt;通过列表推导式遍历测试集文本，对每条文本调用一次 chatgpt_generation，并把输出收集到 predictions。&lt;/div&gt;&lt;/details&gt;
+&lt;/section&gt;
+&lt;div class=&quot;footer&quot;&gt;学习笔记依据：《图解大模型：生成式 AI 原理与实战》第 4 章 4.6.2，第 111–112 页。&lt;br&gt;原书内容与补充解释已尽量区分；本笔记用于辅助学习，不替代原书。&lt;/div&gt;
+&lt;/main&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;annotationAction&quot; class=&quot;annotation-ui&quot;&gt;＋ 添加批注&lt;/div&gt;
+&lt;div id=&quot;annotationEditor&quot; class=&quot;annotation-ui&quot;&gt;
+  &lt;h3&gt;添加批注&lt;/h3&gt;
+  &lt;div id=&quot;annotationQuote&quot; class=&quot;quote&quot; style=&quot;font-size:12px;color:#667085;background:#f8fafc;padding:8px;border-radius:8px;margin:8px 0;max-height:72px;overflow:auto&quot;&gt;&lt;/div&gt;
+  &lt;textarea id=&quot;annotationText&quot; placeholder=&quot;写下你的理解、疑问或补充……&quot;&gt;&lt;/textarea&gt;
+  &lt;div class=&quot;annotation-buttons&quot;&gt;&lt;button id=&quot;annotationCancel&quot; type=&quot;button&quot;&gt;取消&lt;/button&gt;&lt;button id=&quot;annotationSave&quot; class=&quot;primary&quot; type=&quot;button&quot;&gt;保存批注&lt;/button&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;annotationBubble&quot; class=&quot;annotation-ui&quot;&gt;
+  &lt;div style=&quot;display:flex;align-items:center;justify-content:space-between;gap:10px&quot;&gt;&lt;h3&gt;批注&lt;/h3&gt;&lt;button id=&quot;annotationBubbleClose&quot; type=&quot;button&quot; style=&quot;border:0;background:transparent;font-size:20px;cursor:pointer&quot;&gt;×&lt;/button&gt;&lt;/div&gt;
+  &lt;div id=&quot;annotationBubbleQuote&quot; class=&quot;quote&quot;&gt;&lt;/div&gt;&lt;div id=&quot;annotationBubbleText&quot; class=&quot;note-body&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;script&gt;
+(()=&gt;{
+ const init=()=&gt;{
+  const root=document.querySelector(&#x27;.layout &gt; main&#x27;);
+  if(!root || !window.parent) return;
+  if(!window.parent.StudyNotes){setTimeout(init,25);return;}
+  const action=document.getElementById(&#x27;annotationAction&#x27;);
+  const editor=document.getElementById(&#x27;annotationEditor&#x27;);
+  const bubble=document.getElementById(&#x27;annotationBubble&#x27;);
+  const quoteBox=document.getElementById(&#x27;annotationQuote&#x27;);
+  const noteInput=document.getElementById(&#x27;annotationText&#x27;);
+  let pending=null;
+  const day=&#x27;1&#x27;;
+  function textNodes(){
+    const out=[]; const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
+      if(!n.nodeValue || !n.nodeValue.length) return NodeFilter.FILTER_REJECT;
+      if(n.parentElement &amp;&amp; n.parentElement.closest(&#x27;[data-annotation-ui],script,style&#x27;)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }});
+    let n; while(n=walker.nextNode()) out.push(n); return out;
+  }
+  function offsetsFromRange(range){
+    const a=document.createRange();a.selectNodeContents(root);a.setEnd(range.startContainer,range.startOffset);
+    const b=document.createRange();b.selectNodeContents(root);b.setEnd(range.endContainer,range.endOffset);
+    return {start:a.toString().length,end:b.toString().length,quote:range.toString()};
+  }
+  function rangeFromOffsets(start,end){
+    const nodes=textNodes();let total=0,startNode=null,endNode=null,startOffset=0,endOffset=0;
+    for(const n of nodes){const next=total+n.nodeValue.length;
+      if(!startNode &amp;&amp; start&gt;=total &amp;&amp; start&lt;=next){startNode=n;startOffset=start-total;}
+      if(!endNode &amp;&amp; end&gt;=total &amp;&amp; end&lt;=next){endNode=n;endOffset=end-total;break;}
+      total=next;
+    }
+    if(!startNode || !endNode) return null;
+    const r=document.createRange();try{r.setStart(startNode,startOffset);r.setEnd(endNode,endOffset);return r;}catch(e){return null;}
+  }
+  function wrapNote(note){
+    const r=rangeFromOffsets(note.start,note.end);if(!r || !r.toString()) return;
+    const mark=document.createElement(&#x27;mark&#x27;);mark.className=&#x27;annotation-highlight&#x27;;mark.dataset.noteId=note.id;mark.title=&#x27;点击查看批注&#x27;;
+    try{const contents=r.extractContents();mark.appendChild(contents);r.insertNode(mark);}catch(e){}
+  }
+  function restore(){
+    const notes=window.parent.StudyNotes.getAnnotations(day).slice().sort((a,b)=&gt;a.start-b.start);
+    notes.forEach(wrapNote);
+  }
+  function hideAction(){action.style.display=&#x27;none&#x27;;}
+  function openEditor(){
+    if(!pending)return;quoteBox.textContent=pending.quote;noteInput.value=&#x27;&#x27;;editor.style.display=&#x27;block&#x27;;bubble.style.display=&#x27;none&#x27;;noteInput.focus();hideAction();
+  }
+  function closeEditor(){editor.style.display=&#x27;none&#x27;;pending=null;}
+  document.addEventListener(&#x27;mouseup&#x27;,e=&gt;{
+    if(e.target.closest &amp;&amp; e.target.closest(&#x27;.annotation-ui&#x27;)) return;
+    const sel=window.getSelection();if(!sel || sel.isCollapsed || !sel.toString().trim()){hideAction();return;}
+    const r=sel.getRangeAt(0);if(!root.contains(r.commonAncestorContainer))return;
+    pending=offsetsFromRange(r);
+    const rect=r.getBoundingClientRect();action.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-130))+&#x27;px&#x27;;action.style.top=Math.max(8,Math.min(rect.bottom+8,window.innerHeight-48))+&#x27;px&#x27;;action.style.display=&#x27;block&#x27;;
+  });
+  action.addEventListener(&#x27;mousedown&#x27;,e=&gt;e.preventDefault());
+  action.addEventListener(&#x27;click&#x27;,openEditor);
+  document.getElementById(&#x27;annotationCancel&#x27;).addEventListener(&#x27;click&#x27;,closeEditor);
+  document.getElementById(&#x27;annotationSave&#x27;).addEventListener(&#x27;click&#x27;,()=&gt;{
+    const text=noteInput.value.trim();if(!text){noteInput.focus();return;}
+    if(!pending)return;
+    const note={...pending,note:text,createdAt:new Date().toISOString()};
+    const saved=window.parent.StudyNotes.saveAnnotation(day,note);
+    closeEditor();window.getSelection().removeAllRanges();
+    if(saved){wrapNote(saved);window.parent.StudyNotes.refreshCount();}
+  });
+  document.getElementById(&#x27;annotationBubbleClose&#x27;).addEventListener(&#x27;click&#x27;,()=&gt;bubble.style.display=&#x27;none&#x27;);
+  root.addEventListener(&#x27;click&#x27;,e=&gt;{
+    const mark=e.target.closest &amp;&amp; e.target.closest(&#x27;mark[data-note-id]&#x27;);if(!mark)return;
+    const note=window.parent.StudyNotes.getAnnotation(day,mark.dataset.noteId);if(!note)return;
+    document.getElementById(&#x27;annotationBubbleQuote&#x27;).textContent=note.quote;
+    document.getElementById(&#x27;annotationBubbleText&#x27;).textContent=note.note;
+    bubble.style.display=&#x27;block&#x27;;
+  });
+  window.focusAnnotation=function(id){
+    const mark=root.querySelector(&#x27;mark[data-note-id=&quot;&#x27;+CSS.escape(id)+&#x27;&quot;]&#x27;);if(mark){mark.scrollIntoView({behavior:&#x27;smooth&#x27;,block:&#x27;center&#x27;});mark.click();}
+  };
+  window.restoreAnnotations=restore;
+  window.refreshAnnotations=()=&gt;{root.querySelectorAll(&#x27;mark.annotation-highlight&#x27;).forEach(m=&gt;m.replaceWith(...Array.from(m.childNodes)));restore();};
+  restore();
+ };
+ init();
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+    <div class="empty" id="empty"><div class="empty-card"><div class="big">📚</div><h2 id="emptyTitle">这一天的笔记尚未生成</h2><p id="emptyDesc">后续每天学习完成后，我会把原文、讲解、图表和练习整理进这个总网站。届时点击左侧日期即可直接阅读。</p></div></div>
+  </div>
+</main>
+</div>
+
+<div id="notesPanel" aria-hidden="true"><div class="notes-drawer" role="dialog" aria-modal="true" aria-label="批注列表"><div class="notes-head"><h2>本页批注</h2><button id="closeNotes" type="button" aria-label="关闭">×</button></div><div class="notes-body" id="notesBody"></div><div class="notes-tools"><button id="exportNotes" type="button">导出批注 JSON</button><button id="clearNotes" type="button">清空本页批注</button></div></div></div>
+<script>
+const frame=document.getElementById('noteFrame'), empty=document.getElementById('empty'), crumb=document.getElementById('crumb');
+const STORAGE_KEY='bigmodel-study-site-annotations-v1';let volatileStore={};
+function readStore(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}catch(e){return volatileStore}}
+function writeStore(data){volatileStore=data;try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}catch(e){}}
+function activeDay(){const active=document.querySelector('.nav.active');return active?active.dataset.day:'1'}
+window.StudyNotes={
+  getAnnotations(day){return (readStore()[day]||[]).slice()},
+  getAnnotation(day,id){return this.getAnnotations(day).find(n=>n.id===id)},
+  saveAnnotation(day,note){const data=readStore();data[day]=data[day]||[];note.id='note-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);data[day].push(note);writeStore(data);this.render();return note},
+  deleteAnnotation(day,id){const data=readStore();data[day]=(data[day]||[]).filter(n=>n.id!==id);writeStore(data);this.render();},
+  refreshCount(){const n=this.getAnnotations(activeDay()).length;document.getElementById('noteCount').textContent=n;},
+  open(){document.getElementById('notesPanel').classList.add('open');document.getElementById('notesPanel').setAttribute('aria-hidden','false');this.render();},
+  close(){document.getElementById('notesPanel').classList.remove('open');document.getElementById('notesPanel').setAttribute('aria-hidden','true');},
+  render(){
+    const day=activeDay(),notes=this.getAnnotations(day),body=document.getElementById('notesBody');
+    document.getElementById('noteCount').textContent=notes.length;
+    if(!notes.length){body.innerHTML='<div class="empty-notes">还没有批注。<br>在笔记正文中选中任意一段文字，点击出现的「＋ 添加批注」即可。</div>';return;}
+    body.innerHTML='';
+    notes.slice().sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)).forEach(n=>{
+      const item=document.createElement('div');item.className='note-item';
+      const q=document.createElement('div');q.className='quote';q.textContent='“'+n.quote+'”';
+      const b=document.createElement('div');b.className='body';b.textContent=n.note;
+      const meta=document.createElement('div');meta.className='meta';meta.textContent=new Date(n.createdAt).toLocaleString();
+      const actions=document.createElement('div');actions.className='actions';
+      const jump=document.createElement('button');jump.className='jump';jump.textContent='定位原文';jump.addEventListener('click',()=>{this.close();if(frame.contentWindow.focusAnnotation)frame.contentWindow.focusAnnotation(n.id)});
+      const del=document.createElement('button');del.textContent='删除';del.addEventListener('click',()=>{this.deleteAnnotation(day,n.id);if(frame.contentWindow.refreshAnnotations)frame.contentWindow.refreshAnnotations()});
+      actions.append(jump,del);item.append(q,b,meta,actions);body.append(item);
+    });
+  }
+};
+document.getElementById('sidebarToggle').addEventListener('click',()=>document.querySelector('.app').classList.toggle('sidebar-collapsed'));
+document.getElementById('openNotes').addEventListener('click',()=>StudyNotes.open());
+document.getElementById('closeNotes').addEventListener('click',()=>StudyNotes.close());
+document.getElementById('notesPanel').addEventListener('click',e=>{if(e.target.id==='notesPanel')StudyNotes.close()});
+document.getElementById('exportNotes').addEventListener('click',()=>{
+  const data=StudyNotes.getAnnotations(activeDay());const blob=new Blob([JSON.stringify({day:activeDay(),annotations:data},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='day-'+activeDay()+'-annotations.json';a.click();URL.revokeObjectURL(url);
+});
+document.getElementById('clearNotes').addEventListener('click',()=>{if(!confirm('确定清空当前学习日的全部批注吗？此操作无法撤销。'))return;const data=readStore();data[activeDay()]=[];writeStore(data);StudyNotes.render();if(frame.contentWindow.refreshAnnotations)frame.contentWindow.refreshAnnotations()});
+function loadDay(d){
+  document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));
+  const btn=document.querySelector('.nav[data-day="'+d+'"]');if(btn)btn.classList.add('active');
+  if(d==='1'){frame.style.display='block';empty.style.display='none';crumb.textContent='学习笔记 / Day 1 / 使用 ChatGPT 进行文本分类';}
+  else{frame.style.display='none';empty.style.display='flex';document.getElementById('emptyTitle').textContent='Day '+d+' · 内容待更新';document.getElementById('emptyDesc').textContent='这一天的学习内容尚未整理。你继续学习并提问后，我会把对应笔记添加到这个总网站中，保持每天一个可点击的独立页面。';crumb.textContent='学习笔记 / Day '+d+' / 待更新';}
+  StudyNotes.refreshCount();
+}
+document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>loadDay(btn.dataset.day)));
+frame.addEventListener('load',()=>StudyNotes.refreshCount());
+StudyNotes.refreshCount();
+</script>
+</body></html>
