@@ -102,7 +102,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
 &lt;div class=&quot;layout&quot;&gt;
 &lt;nav class=&quot;toc&quot;&gt;
   &lt;strong&gt;本页目录&lt;/strong&gt;
-  &lt;a href=&quot;#goal&quot;&gt;01 学习目标&lt;/a&gt;&lt;a href=&quot;#api&quot;&gt;02 API 是什么&lt;/a&gt;&lt;a href=&quot;#client&quot;&gt;03 创建客户端&lt;/a&gt;&lt;a href=&quot;#function&quot;&gt;04 封装生成函数&lt;/a&gt;&lt;a href=&quot;#messages&quot;&gt;05 messages 与角色结构&lt;/a&gt;&lt;a href=&quot;#prompt&quot;&gt;06 分类提示词模板&lt;/a&gt;&lt;a href=&quot;#batch&quot;&gt;07 批量预测&lt;/a&gt;&lt;a href=&quot;#evaluate&quot;&gt;08 提取标签与评估&lt;/a&gt;&lt;a href=&quot;#cautions&quot;&gt;09 成本与限制&lt;/a&gt;&lt;a href=&quot;#summary&quot;&gt;10 全流程总结&lt;/a&gt;&lt;a href=&quot;#check&quot;&gt;11 自测&lt;/a&gt;
+  &lt;a href=&quot;#goal&quot;&gt;01 学习目标&lt;/a&gt;&lt;a href=&quot;#api&quot;&gt;02 API 是什么&lt;/a&gt;&lt;a href=&quot;#client&quot;&gt;03 创建客户端&lt;/a&gt;&lt;a href=&quot;#function&quot;&gt;04 封装生成函数&lt;/a&gt;&lt;a href=&quot;#messages&quot;&gt;05 messages 与角色结构&lt;/a&gt;&lt;a href=&quot;#prompt&quot;&gt;06 分类提示词模板&lt;/a&gt;&lt;a href=&quot;#batch&quot;&gt;07 批量预测&lt;/a&gt;&lt;a href=&quot;#evaluate&quot;&gt;08 提取标签与评估&lt;/a&gt;&lt;a href=&quot;#cautions&quot;&gt;09 成本与限制&lt;/a&gt;&lt;a href=&quot;#summary&quot;&gt;10 全流程总结&lt;/a&gt;&lt;a href=&quot;#check&quot;&gt;11 自测&lt;/a&gt;&lt;a href=&quot;#extra-prompt&quot;&gt;12 prompt / messages 补充&lt;/a&gt;
 &lt;/nav&gt;
 &lt;main&gt;
 &lt;section class=&quot;card&quot; id=&quot;goal&quot;&gt;
@@ -246,6 +246,23 @@ evaluate_performance(data[&quot;test&quot;][&quot;label&quot;], y_pred)&lt;/code
 &lt;details class=&quot;qa&quot;&gt;&lt;summary&gt;5. 批量预测代码是如何处理测试集的？&lt;/summary&gt;&lt;div class=&quot;answer&quot;&gt;通过列表推导式遍历测试集文本，对每条文本调用一次 chatgpt_generation，并把输出收集到 predictions。&lt;/div&gt;&lt;/details&gt;
 &lt;/section&gt;
 &lt;div class=&quot;footer&quot;&gt;学习笔记依据：《图解大模型：生成式 AI 原理与实战》第 4 章 4.6.2，第 111–112 页。&lt;br&gt;原书内容与补充解释已尽量区分；本笔记用于辅助学习，不替代原书。&lt;/div&gt;
+
+&lt;section class=&quot;card&quot; id=&quot;extra-prompt&quot;&gt;
+&lt;h2&gt;12｜补充答疑：prompt 和 messages 到底有何区别？&lt;/h2&gt;
+&lt;p&gt;&lt;b&gt;prompt&lt;/b&gt; 是书中保存任务说明的字符串模板；&lt;b&gt;document&lt;/b&gt; 是本次评论；&lt;b&gt;messages&lt;/b&gt; 是多条带有角色（role）和正文（content）的消息组成的列表。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;prompt = &quot;判断影评：[DOCUMENT]。正面1，负面0。&quot;
+document = &quot;这部电影精彩。&quot;
+task = prompt.replace(&quot;[DOCUMENT]&quot;, document)
+messages = [
+    {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a helpful assistant.&quot;},
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: task}
+]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;定义 prompt 或执行 replace 都不会调用模型。只有将 messages 传给 &lt;code&gt;client.chat.completions.create(messages=messages, ...)&lt;/code&gt; 才会发送请求。&lt;/p&gt;
+&lt;div class=&quot;grid2&quot;&gt;&lt;div class=&quot;mini&quot;&gt;&lt;div class=&quot;tag&quot;&gt;System&lt;/div&gt;&lt;p&gt;描述整体规则、角色或输出风格。书中只说“你是一个有帮助的助手”。&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;mini&quot;&gt;&lt;div class=&quot;tag&quot;&gt;User&lt;/div&gt;&lt;p&gt;提供当前分类任务和实际评论。书中的情感分类指令主要放在这里。&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;b&gt;实例比较：&lt;/b&gt; System 说“简短输出”、User 说“精彩的电影，正面给1”，可能输出 1；System 改为“用 JSON 输出”，则可能输出 {&amp;quot;label&amp;quot;:1}。消息变了，模型的参数并未因此更新。&lt;/p&gt;
+&lt;div class=&quot;callout good&quot;&gt;&lt;b&gt;易错点：&lt;/b&gt;日常语言中 prompt 可以泛指全部提示，但这段 Python 代码里它只是一个名叫 prompt 的变量，不能和 messages 列表画等号。&lt;/div&gt;
+&lt;p class=&quot;small&quot;&gt;对照原书第111页；上述中文实例为教学补充。&lt;/p&gt;
+&lt;/section&gt;
 &lt;/main&gt;
 &lt;/div&gt;
 &lt;/div&gt;
