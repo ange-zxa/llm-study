@@ -99,8 +99,9 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
 #annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
 &lt;/style&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;annotations.css&quot;&gt;
 &lt;/head&gt;
-&lt;body&gt;
+&lt;body data-study-day=&quot;1&quot;&gt;
 &lt;div class=&quot;wrap&quot;&gt;
 &lt;header class=&quot;hero&quot;&gt;
   &lt;div class=&quot;eyebrow&quot;&gt;DAILY STUDY NOTE · DAY 1&lt;/div&gt;
@@ -275,164 +276,8 @@ messages = [
 &lt;/main&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;div id=&quot;annotationAction&quot; class=&quot;annotation-ui annotation-toolbar&quot; data-annotation-ui&gt;
-  &lt;button id=&quot;makeHighlight&quot; type=&quot;button&quot; title=&quot;只给选中文字添加颜色&quot;&gt;高亮&lt;/button&gt;
-  &lt;button id=&quot;makeAnnotation&quot; type=&quot;button&quot; title=&quot;给选中文字添加下划线并写批注&quot;&gt;添加批注&lt;/button&gt;
-  &lt;span id=&quot;annotationToolbarStatus&quot; role=&quot;status&quot;&gt;&lt;/span&gt;
-&lt;/div&gt;
-&lt;div id=&quot;annotationEditor&quot; class=&quot;annotation-ui&quot; data-annotation-ui&gt;
-  &lt;h3&gt;添加批注&lt;/h3&gt;&lt;div class=&quot;quote&quot; id=&quot;annotationQuote&quot;&gt;&lt;/div&gt;
-  &lt;textarea id=&quot;annotationText&quot; placeholder=&quot;写下你的理解、疑问或补充&quot;&gt;&lt;/textarea&gt;
-  &lt;div id=&quot;annotationStatus&quot; role=&quot;status&quot; style=&quot;font-size:12px;color:#b45309;min-height:18px;margin-top:6px&quot;&gt;&lt;/div&gt;
-  &lt;div class=&quot;annotation-buttons&quot;&gt;&lt;button id=&quot;annotationCancel&quot; type=&quot;button&quot;&gt;取消&lt;/button&gt;&lt;button id=&quot;annotationSave&quot; class=&quot;primary&quot; type=&quot;button&quot;&gt;保存批注&lt;/button&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&quot;annotationBubble&quot; class=&quot;annotation-ui&quot; data-annotation-ui&gt;
-  &lt;div style=&quot;display:flex;justify-content:space-between;align-items:center&quot;&gt;&lt;h3&gt;这段文字的批注&lt;/h3&gt;&lt;button id=&quot;annotationBubbleClose&quot; type=&quot;button&quot; style=&quot;border:0;background:transparent;font-size:20px;cursor:pointer&quot;&gt;×&lt;/button&gt;&lt;/div&gt;
-  &lt;div id=&quot;annotationBubbleQuote&quot; class=&quot;quote&quot;&gt;&lt;/div&gt;&lt;div id=&quot;annotationBubbleText&quot; class=&quot;note-body&quot;&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;script&gt;
-(()=&gt;{
- const init=()=&gt;{
-  const root=document.querySelector('.wrap')||document.querySelector('.layout &gt; main');
-  if(!root||!window.parent){return;}
-  if(!window.parent.StudyNotes){setTimeout(init,30);return;}
-  const action=document.getElementById('annotationAction');
-  const editor=document.getElementById('annotationEditor');
-  const bubble=document.getElementById('annotationBubble');
-  const quoteBox=document.getElementById('annotationQuote');
-  const noteInput=document.getElementById('annotationText');
-  const toolbarStatus=document.getElementById('annotationToolbarStatus');
-  let pending=null;
-  const day='1';
-  function textNodes(){
-   const out=[],walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
-    if(!n.nodeValue||!n.nodeValue.length)return NodeFilter.FILTER_REJECT;
-    if(n.parentElement&amp;&amp;n.parentElement.closest('[data-annotation-ui],script,style'))return NodeFilter.FILTER_REJECT;
-    return NodeFilter.FILTER_ACCEPT;
-   }});
-   let n;while(n=walker.nextNode())out.push(n);return out;
-  }
-  function offsetsFromRange(range){
-   const a=document.createRange();a.selectNodeContents(root);a.setEnd(range.startContainer,range.startOffset);
-   const b=document.createRange();b.selectNodeContents(root);b.setEnd(range.endContainer,range.endOffset);
-   return {start:a.toString().length,end:b.toString().length,quote:range.toString()};
-  }
-  function rangeFromOffsets(start,end){
-   const nodes=textNodes();let total=0,startNode=null,endNode=null,startOffset=0,endOffset=0;
-   for(const n of nodes){const next=total+n.nodeValue.length;
-    if(!startNode&amp;&amp;start&gt;=total&amp;&amp;start&lt;=next){startNode=n;startOffset=start-total;}
-    if(!endNode&amp;&amp;end&gt;=total&amp;&amp;end&lt;=next){endNode=n;endOffset=end-total;break;}
-    total=next;
-   }
-   if(!startNode||!endNode)return null;
-   const r=document.createRange();try{r.setStart(startNode,startOffset);r.setEnd(endNode,endOffset);return r;}catch(e){return null;}
-  }
-  function wrapRecord(record){
-   // Wrap text nodes individually: never move paragraphs or inline formatting.
-   if(!Number.isFinite(record.start)||!Number.isFinite(record.end)||record.end&lt;=record.start)return;
-   const nodes=textNodes(),parts=[];let cursor=0;
-   const plain=nodes.map(n=&gt;n.nodeValue).join('');
-   if(record.quote&amp;&amp;plain.slice(record.start,record.end)!==record.quote)return;
-   for(const n of nodes){
-    const next=cursor+n.nodeValue.length;
-    const from=Math.max(0,record.start-cursor);
-    const to=Math.min(n.nodeValue.length,record.end-cursor);
-    if(to&gt;from)parts.push({node:n,from,to});
-    cursor=next;
-   }
-   for(let i=parts.length-1;i&gt;=0;i--){
-    const {node,from,to}=parts[i];
-    if(!node.isConnected)continue;
-    const mark=document.createElement('span');
-    const isHighlight=record.type==='highlight';
-    mark.className='annotation-mark '+(isHighlight?'annotation-highlight':'annotation-underline');
-    mark.dataset.noteId=record.id;mark.dataset.noteType=isHighlight?'highlight':'annotation';
-    mark.title=isHighlight?'文本高亮':'点击查看批注';
-    const r=document.createRange();r.setStart(node,from);r.setEnd(node,to);
-    try{r.surroundContents(mark);}catch(e){}
-   }
-  }
-  function restore(){
-   const records=window.parent.StudyNotes.getAnnotations(day).filter(n=&gt;Number.isFinite(n.start)&amp;&amp;Number.isFinite(n.end)).slice().sort((a,b)=&gt;a.start-b.start);
-   records.forEach(wrapRecord);
-  }
-  function unwrapAll(){root.querySelectorAll('.annotation-mark').forEach(m=&gt;m.replaceWith(...Array.from(m.childNodes)));}
-  function refresh(){unwrapAll();restore();}
-  function hideAction(){action.style.display='none';}
-  function clearSelection(){const sel=window.getSelection();if(sel)sel.removeAllRanges();}
-  function showError(message){toolbarStatus.textContent=message;action.style.display='flex';}
-  function saveRecord(record){
-   const saved=window.parent.StudyNotes.saveAnnotation(day,record);
-   if(!saved)throw new Error('保存接口没有返回结果。');
-   wrapRecord(saved);window.parent.StudyNotes.refreshCount();clearSelection();hideAction();pending=null;
-   return saved;
-  }
-  function openEditor(){
-   if(!pending)return;
-   quoteBox.textContent=pending.quote;noteInput.value='';
-   document.getElementById('annotationStatus').textContent='';
-   editor.style.display='block';bubble.style.display='none';hideAction();noteInput.focus();
-  }
-  function closeEditor(){editor.style.display='none';pending=null;}
-  document.addEventListener('mouseup',e=&gt;{
-   if(e.target.closest&amp;&amp;e.target.closest('[data-annotation-ui]'))return;
-   const sel=window.getSelection();
-   if(!sel||sel.isCollapsed||!sel.toString().trim()){hideAction();return;}
-   const r=sel.getRangeAt(0);if(!root.contains(r.commonAncestorContainer))return;
-   pending=offsetsFromRange(r);toolbarStatus.textContent='';
-   const rect=r.getBoundingClientRect();
-   action.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-250))+'px';
-   action.style.top=Math.max(8,Math.min(rect.bottom+8,window.innerHeight-50))+'px';
-   action.style.display='flex';
-  });
-  action.addEventListener('mousedown',e=&gt;e.preventDefault());
-  document.getElementById('makeHighlight').addEventListener('click',()=&gt;{
-   if(!pending)return;
-   try{saveRecord({...pending,type:'highlight',note:'',createdAt:new Date().toISOString()});}
-   catch(err){showError('高亮保存失败：'+(err&amp;&amp;err.message?err.message:'未知错误'));}
-  });
-  document.getElementById('makeAnnotation').addEventListener('click',openEditor);
-  document.getElementById('annotationCancel').addEventListener('click',closeEditor);
-  document.getElementById('annotationSave').addEventListener('click',()=&gt;{
-   const text=noteInput.value.trim();
-   if(!text){noteInput.focus();document.getElementById('annotationStatus').textContent='请先填写批注内容。';return;}
-   if(!pending){document.getElementById('annotationStatus').textContent='没有捕获到选中的原文，请重新选择文字。';return;}
-   try{
-    saveRecord({...pending,type:'annotation',note:text,createdAt:new Date().toISOString()});
-    editor.style.display='none';bubble.style.display='none';
-   }catch(err){document.getElementById('annotationStatus').textContent='保存失败：'+(err&amp;&amp;err.message?err.message:'未知错误');}
-  });
-  document.getElementById('annotationBubbleClose').addEventListener('click',()=&gt;bubble.style.display='none');
-  root.addEventListener('click',e=&gt;{
-   const mark=e.target.closest&amp;&amp;e.target.closest('[data-note-id]');if(!mark||mark.dataset.noteType==='highlight')return;
-   const record=window.parent.StudyNotes.getAnnotation(day,mark.dataset.noteId);if(!record)return;
-   document.getElementById('annotationBubbleQuote').textContent=record.quote;
-   document.getElementById('annotationBubbleText').textContent=record.note||'';
-   bubble.style.display='block';
-  });
-  window.focusAnnotation=function(id){
-   const mark=root.querySelector('[data-note-id=&quot;'+CSS.escape(id)+'&quot;]');
-   if(mark){mark.scrollIntoView({behavior:'smooth',block:'center'});if(mark.dataset.noteType!=='highlight')mark.click();}
-  };
-  window.restoreAnnotations=restore;
-  window.refreshAnnotations=refresh;
-  function migrateLegacy(){
-   const key='llm-study-day'+day+'-notes-v1';let legacy=[];
-   try{legacy=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){legacy=[];}
-   if(!Array.isArray(legacy)||!legacy.length)return;
-   const source=textNodes().map(n=&gt;n.nodeValue).join('');let cursor=0;
-   legacy.forEach(old=&gt;{
-    if(!old||!old.quote||!old.note)return;
-    let start=source.indexOf(old.quote,cursor);if(start&lt;0)start=source.indexOf(old.quote);
-    if(start&gt;=0){window.parent.StudyNotes.saveAnnotation(day,{quote:old.quote,start,end:start+old.quote.length,type:'annotation',note:old.note,createdAt:old.time||new Date().toISOString()});cursor=start+old.quote.length;}
-   });
-   localStorage.removeItem(key);
-  }
-  migrateLegacy();restore();
- };
- init();
-})();
-&lt;/script&gt;
+
+&lt;script src=&quot;annotations.js&quot;&gt;&lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;
 "></iframe>
