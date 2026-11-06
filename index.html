@@ -63,7 +63,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
   </div>
 </aside>
 <main>
-  <div class="topbar"><div class="left-actions"><button id="sidebarToggle" type="button" aria-label="收起或展开目录">☰ 目录</button><div class="crumb" id="crumb">学习笔记 / Day 1 / 使用 ChatGPT 进行文本分类</div></div><div class="top-actions"><button id="openNotes" type="button"><span id="openNotesLabel">批注</span>（<span id="noteCount">0</span>）</button><a href="javascript:window.print()">打印 / 保存 PDF</a></div></div>
+  <div class="topbar"><div class="left-actions"><button id="sidebarToggle" type="button" aria-label="收起或展开目录">☰ 目录</button><div class="crumb" id="crumb">学习笔记 / Day 1 / 使用 ChatGPT 进行文本分类</div></div><div class="top-actions"><button id="openNotes" type="button"><span id="openNotesLabel">标记/批注</span>（<span id="noteCount">0</span>）</button><a href="javascript:window.print()">打印 / 保存 PDF</a></div></div>
   <div class="viewer" id="viewer">
     <iframe id="noteFrame" title="Day 1 学习笔记" srcdoc="&lt;!doctype html&gt;
 &lt;html lang=&quot;zh-CN&quot;&gt;
@@ -84,7 +84,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
 .annotation-underline:hover{text-decoration-thickness:2px!important}
 .annotation-ui{font:14px/1.5 -apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;color:#172033}
 .annotation-toolbar{position:fixed;z-index:99999;display:none;align-items:center;gap:6px;padding:6px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.2);width:max-content;max-width:calc(100vw - 16px)}
-.annotation-toolbar button{border:1px solid #d0d5dd;background:#fff;border-radius:8px;padding:7px 11px;cursor:pointer;font:600 13px/1.3 inherit;white-space:nowrap}
+.annotation-toolbar button{border:1px solid #d0d5dd;background:#fff;border-radius:8px;padding:7px 11px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;line-height:1.3;white-space:nowrap}
 .annotation-toolbar #makeHighlight{background:#fff4c2;border-color:#e6c65c}
 .annotation-toolbar #makeAnnotation{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
 #annotationToolbarStatus{font-size:11px;color:#b45309;max-width:180px}
@@ -426,7 +426,7 @@ messages = [
 </main>
 </div>
 
-<div id="notesPanel" aria-hidden="true"><div class="notes-drawer" role="dialog" aria-modal="true" aria-label="批注列表"><div class="notes-head"><h2>本页标记与批注</h2><button id="closeNotes" type="button" aria-label="关闭">×</button></div><div class="notes-body" id="notesBody"></div><div class="notes-tools"><button id="exportNotes" type="button">导出批注 JSON</button><button id="clearNotes" type="button">清空本页标记</button></div></div></div>
+<div id="notesPanel" aria-hidden="true"><div class="notes-drawer" role="dialog" aria-modal="true" aria-label="批注列表"><div class="notes-head"><h2>本页标记与批注</h2><button id="closeNotes" type="button" aria-label="关闭">×</button></div><div class="notes-body" id="notesBody"></div><div class="notes-tools"><button id="exportNotes" type="button">导出标记与批注 JSON</button><button id="clearNotes" type="button">清空本页标记</button></div></div></div>
 <script>
 const frame=document.getElementById('noteFrame'), empty=document.getElementById('empty'), crumb=document.getElementById('crumb');
 const STORAGE_KEY='bigmodel-study-site-annotations-v1';let volatileStore={};
@@ -467,7 +467,7 @@ document.getElementById('notesPanel').addEventListener('click',e=>{if(e.target.i
 document.getElementById('exportNotes').addEventListener('click',()=>{
   const data=StudyNotes.getAnnotations(activeDay());const blob=new Blob([JSON.stringify({day:activeDay(),annotations:data},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='day-'+activeDay()+'-annotations.json';a.click();URL.revokeObjectURL(url);
 });
-document.getElementById('clearNotes').addEventListener('click',()=>{if(!confirm('确定清空当前学习日的全部批注吗？此操作无法撤销。'))return;const data=readStore();data[activeDay()]=[];writeStore(data);StudyNotes.render();if(frame.contentWindow.refreshAnnotations)frame.contentWindow.refreshAnnotations()});
+document.getElementById('clearNotes').addEventListener('click',()=>{if(!confirm('确定清空当前学习日的全部高亮和批注吗？此操作无法撤销。'))return;const data=readStore();data[activeDay()]=[];writeStore(data);StudyNotes.render();if(frame.contentWindow.refreshAnnotations)frame.contentWindow.refreshAnnotations()});
 const day1Srcdoc=frame.getAttribute('srcdoc');
 function loadDay(d){
   document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));
@@ -494,7 +494,7 @@ function loadDay(d){
     document.getElementById('emptyDesc').textContent='这一天的学习内容尚未整理。继续学习后将加入对应笔记。';
     crumb.textContent='学习笔记 / Day '+d+' / 待更新';
   }
-  const notesLabel=document.getElementById('openNotesLabel');if(notesLabel)notesLabel.textContent='批注';
+  const notesLabel=document.getElementById('openNotesLabel');if(notesLabel)notesLabel.textContent='标记/批注';
   StudyNotes.refreshCount();
 }
 document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>loadDay(btn.dataset.day)));
