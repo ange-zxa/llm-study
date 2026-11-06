@@ -102,8 +102,22 @@ reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre><p>代码�
     try{const contents=r.extractContents();mark.appendChild(contents);r.insertNode(mark);}catch(e){}
   }
   function restore(){
-    const notes=window.parent.StudyNotes.getAnnotations(day).slice().sort((a,b)=>a.start-b.start);
+    const notes=window.parent.StudyNotes.getAnnotations(day).filter(n=>Number.isFinite(n.start)&&Number.isFinite(n.end)).slice().sort((a,b)=>a.start-b.start);
     notes.forEach(wrapNote);
+  }
+  function migrateLegacy(){
+    const key='llm-study-day'+day+'-notes-v1';let legacy=[];
+    try{legacy=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){legacy=[]}
+    if(!Array.isArray(legacy)||!legacy.length)return;
+    const source=textNodes().map(n=>n.nodeValue).join('');let cursor=0;
+    legacy.forEach(old=>{
+      if(!old||!old.quote||!old.note)return;
+      let start=source.indexOf(old.quote,cursor);if(start<0)start=source.indexOf(old.quote);
+      const note={quote:old.quote,note:old.note,createdAt:old.time||new Date().toISOString()};
+      if(start>=0){note.start=start;note.end=start+old.quote.length;cursor=note.end;}
+      window.parent.StudyNotes.saveAnnotation(day,note);
+    });
+    localStorage.removeItem(key);
   }
   function hideAction(){action.style.display='none';}
   function openEditor(){
@@ -149,6 +163,7 @@ reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre><p>代码�
     root.querySelectorAll('mark.annotation-highlight').forEach(m=>m.replaceWith(...Array.from(m.childNodes)));
     restore();
   };
+  migrateLegacy();
   restore();
  };
  init();
