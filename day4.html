@@ -4,7 +4,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#192238;font:16px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.wrap{max-width:900px;margin:auto;padding:28px 20px 90px}header,section{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:26px 32px;margin-bottom:18px}header{background:linear-gradient(120deg,#eaf2ff,#fff)}h1{font-size:30px;line-height:1.35;margin:8px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:17px;margin:20px 0 8px}.muted,small{color:#64748b}.pill{display:inline-block;color:#1d4ed8;background:#dbeafe;border-radius:20px;padding:2px 10px;font-size:13px}.call{background:#eff6ff;padding:12px 16px;border-left:4px solid #2563eb;border-radius:8px;margin:14px 0}.good{background:#f0fdf4;border-left-color:#16a34a}.warn{background:#fff7ed;border-left-color:#ea580c}pre{background:#101827;color:#e2e8f0;padding:16px;border-radius:12px;white-space:pre-wrap;overflow:auto;font-size:13px;line-height:1.7}code{font-family:ui-monospace,Consolas,monospace}p code{background:#e9eef5;padding:1px 4px;border-radius:4px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e7eb;padding:9px;text-align:left}th{background:#f8fafc}.flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.step{flex:1 1 140px;border:1px solid #dbe2ea;border-radius:12px;padding:14px;text-align:center;background:#fff}.arrow{color:#94a3b8;font-size:22px}details{border:1px solid #dbe2ea;padding:12px 16px;border-radius:12px;margin:8px 0}summary{cursor:pointer;font-weight:600}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button,#editor button{border:1px solid #cbd5e1;background:white;border-radius:8px;padding:7px 12px;cursor:pointer}#notes{display:none;background:#eff6ff;padding:12px;border-radius:10px;margin-top:12px}.note{border-bottom:1px solid #dbe2ea;padding:8px 0;white-space:pre-wrap}#annotate{display:none;position:fixed;bottom:16px;right:16px;z-index:10;background:#1d4ed8;color:white;border:0;border-radius:10px;padding:10px 15px;cursor:pointer}#editor{display:none;position:fixed;bottom:18px;right:18px;width:min(360px,calc(100vw - 36px));z-index:20;background:white;box-shadow:0 12px 45px #0003;padding:20px;border:1px solid #ddd;border-radius:14px}#editor textarea{width:100%;height:100px;padding:10px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:600px){header,section{padding:20px}.wrap{padding:14px}}
 /* Selection actions: highlight and annotation are visually distinct */
-.annotation-mark{display:inline;border-radius:2px;padding:0 1px}
+.annotation-mark{display:inline;border-radius:2px;padding:0;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .annotation-highlight{background:#ffe89a!important;color:inherit!important;text-decoration:none!important;box-shadow:none!important;cursor:inherit}
 .annotation-underline{background:transparent!important;color:inherit!important;text-decoration:underline!important;text-decoration-color:#2563eb!important;text-decoration-thickness:1.5px!important;text-underline-offset:3px!important;cursor:pointer}
 .annotation-underline:hover{text-decoration-thickness:2px!important}
@@ -108,20 +108,39 @@ reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre><p>代码�
    const r=document.createRange();try{r.setStart(startNode,startOffset);r.setEnd(endNode,endOffset);return r;}catch(e){return null;}
   }
   function wrapRecord(record){
-   const r=rangeFromOffsets(record.start,record.end);if(!r||!r.toString())return;
-   if(record.quote&&r.toString()!==record.quote)return;
-   const isHighlight=record.type==='highlight';
-   const mark=document.createElement('mark');
-   mark.className='annotation-mark '+(isHighlight?'annotation-highlight':'annotation-underline');
-   mark.dataset.noteId=record.id;mark.dataset.noteType=isHighlight?'highlight':'annotation';
-   mark.title=isHighlight?'文本高亮':'点击查看批注';
-   try{const contents=r.extractContents();mark.appendChild(contents);r.insertNode(mark);}catch(e){}
+   // Preserve the original paragraph, link and heading layout.
+   // Never extract a multi-element Range into one <mark>.
+   if(!Number.isFinite(record.start)||!Number.isFinite(record.end)||record.end<=record.start)return;
+   const nodes=textNodes(),parts=[];let cursor=0;
+   const plain=nodes.map(n=>n.nodeValue).join('');
+   if(record.quote&&plain.slice(record.start,record.end)!==record.quote)return;
+   for(const n of nodes){
+    const next=cursor+n.nodeValue.length;
+    const from=Math.max(0,record.start-cursor);
+    const to=Math.min(n.nodeValue.length,record.end-cursor);
+    if(to>from)parts.push({node:n,from,to});
+    cursor=next;
+   }
+   // Work backwards so splitting a text node cannot invalidate later offsets.
+   for(let i=parts.length-1;i>=0;i--){
+    const {node,from,to}=parts[i];
+    if(!node.isConnected)continue;
+    const mark=document.createElement('span');
+    const isHighlight=record.type==='highlight';
+    mark.className='annotation-mark '+(isHighlight?'annotation-highlight':'annotation-underline');
+    mark.dataset.noteId=record.id;
+    mark.dataset.noteType=isHighlight?'highlight':'annotation';
+    mark.title=isHighlight?'文本高亮':'点击查看批注';
+    const r=document.createRange();
+    r.setStart(node,from);r.setEnd(node,to);
+    try{r.surroundContents(mark);}catch(e){/* Leave original DOM untouched on unsupported selections. */}
+   }
   }
   function restore(){
    const records=window.parent.StudyNotes.getAnnotations(day).filter(n=>Number.isFinite(n.start)&&Number.isFinite(n.end)).slice().sort((a,b)=>a.start-b.start);
    records.forEach(wrapRecord);
   }
-  function unwrapAll(){root.querySelectorAll('mark.annotation-mark').forEach(m=>m.replaceWith(...Array.from(m.childNodes)));}
+  function unwrapAll(){root.querySelectorAll('.annotation-mark').forEach(m=>m.replaceWith(...Array.from(m.childNodes)));}
   function refresh(){unwrapAll();restore();}
   function hideAction(){action.style.display='none';}
   function clearSelection(){const sel=window.getSelection();if(sel)sel.removeAllRanges();}
@@ -169,14 +188,14 @@ reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre><p>代码�
   });
   document.getElementById('annotationBubbleClose').addEventListener('click',()=>bubble.style.display='none');
   root.addEventListener('click',e=>{
-   const mark=e.target.closest&&e.target.closest('mark[data-note-id]');if(!mark||mark.dataset.noteType==='highlight')return;
+   const mark=e.target.closest&&e.target.closest('[data-note-id]');if(!mark||mark.dataset.noteType==='highlight')return;
    const record=window.parent.StudyNotes.getAnnotation(day,mark.dataset.noteId);if(!record)return;
    document.getElementById('annotationBubbleQuote').textContent=record.quote;
    document.getElementById('annotationBubbleText').textContent=record.note||'';
    bubble.style.display='block';
   });
   window.focusAnnotation=function(id){
-   const mark=root.querySelector('mark[data-note-id="'+CSS.escape(id)+'"]');
+   const mark=root.querySelector('[data-note-id="'+CSS.escape(id)+'"]');
    if(mark){mark.scrollIntoView({behavior:'smooth',block:'center'});if(mark.dataset.noteType!=='highlight')mark.click();}
   };
   window.restoreAnnotations=restore;
