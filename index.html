@@ -9,7 +9,7 @@
 .app{height:100vh;display:grid;grid-template-columns:290px minmax(0,1fr)}
 aside{background:var(--panel);border-right:1px solid var(--line);padding:24px 18px;overflow:auto}
 .brand{padding:8px 10px 22px;border-bottom:1px solid var(--line)}.eyebrow{font-size:11px;letter-spacing:.12em;color:var(--blue);font-weight:800}.brand h1{font-size:21px;line-height:1.35;margin:8px 0}.brand p{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
-.progress{margin:18px 8px 22px;padding:14px;border:1px solid #dbeafe;background:var(--blue-soft);border-radius:14px}.progress-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700}.bar{height:6px;border-radius:99px;background:#dbeafe;margin-top:10px;overflow:hidden}.bar span{display:block;width:25%;height:100%;background:var(--blue);border-radius:99px}
+.progress{margin:18px 8px 22px;padding:14px;border:1px solid #dbeafe;background:var(--blue-soft);border-radius:14px}.progress-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700}.bar{height:6px;border-radius:99px;background:#dbeafe;margin-top:10px;overflow:hidden}.bar span{display:block;width:33.33%;height:100%;background:var(--blue);border-radius:99px}
 .group-title{margin:20px 10px 8px;color:#98a2b3;font-size:11px;font-weight:800;letter-spacing:.08em}.nav{display:flex;align-items:flex-start;gap:11px;text-decoration:none;color:#475467;padding:11px 10px;margin:3px 0;border-radius:11px;border:1px solid transparent;cursor:pointer;width:100%;text-align:left;background:transparent;font:inherit}.nav:hover{background:#f8fafc}.nav.active{background:var(--blue-soft);border-color:#dbeafe;color:#1d4ed8}.num{flex:0 0 29px;height:29px;border-radius:9px;background:#f2f4f7;display:grid;place-items:center;font-size:11px;font-weight:800;color:#667085}.active .num{background:#dbeafe;color:#1d4ed8}.nav-text{min-width:0;flex:1}.nav-text strong{display:block;font-size:13px;line-height:1.45}.nav-text small{display:block;font-size:11px;color:#98a2b3;margin-top:3px}.status{font-size:10px;color:#15803d;background:#dcfce7;padding:3px 6px;border-radius:99px;white-space:nowrap}
 main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:58px;flex:0 0 58px;background:rgba(255,255,255,.9);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:12px}.crumb{font-size:13px;color:var(--muted)}.top-actions{display:flex;gap:8px}.top-actions a{font-size:12px;color:#344054;text-decoration:none;border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:#fff}.viewer{flex:1;min-height:0;position:relative}iframe{width:100%;height:100%;border:0;background:#f5f7fb}.empty{height:100%;display:none;align-items:center;justify-content:center;padding:30px}.empty-card{max-width:520px;background:white;border:1px solid var(--line);border-radius:22px;padding:34px;box-shadow:var(--shadow);text-align:center}.empty-card .big{font-size:38px}.empty-card h2{margin:12px 0 8px;font-size:22px}.empty-card p{color:var(--muted);line-height:1.8;font-size:14px}.mobile-menu{display:none}
 @media(max-width:820px){.app{grid-template-columns:1fr}aside{height:auto;max-height:42vh;border-right:0;border-bottom:1px solid var(--line);padding:12px 14px}.brand{padding:6px 6px 12px}.brand h1{font-size:18px;margin:5px 0}.progress{margin:10px 4px}.group-title{margin-top:12px}.nav-list{display:grid;grid-template-columns:1fr 1fr;gap:2px}.nav{padding:8px 6px}.nav-text strong{font-size:12px}main{height:58vh;min-height:400px}.topbar{height:48px;flex-basis:48px;padding:0 12px}.top-actions a{padding:6px 8px}}
@@ -39,7 +39,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
 <div class="app">
 <aside>
   <div class="brand"><div class="eyebrow">PERSONAL STUDY LIBRARY</div><h1>图解大模型<br>每日学习网站</h1><p>以《图解大模型：生成式 AI 原理与实战》为主线，按天整理原文、讲解、代码与练习。</p></div>
-  <div class="progress"><div class="progress-top"><span>每日学习进度</span><span>3 / 12 天</span></div><div class="bar"><span></span></div><div style="font-size:11px;color:#667085;margin-top:8px">Day 1–3 已完成；后续笔记按原书章节归类。</div></div>
+  <div class="progress"><div class="progress-top"><span>每日学习进度</span><span>4 / 12 天</span></div><div class="bar"><span></span></div><div style="font-size:11px;color:#667085;margin-top:8px">Day 1–4 已完成；后续笔记按原书章节归类。</div></div>
   <div class="group-title">第 4 章 · 文本分类</div>
   <div class="nav-list">
     <button class="nav active" data-day="1"><span class="num">01</span><span class="nav-text"><strong>使用 ChatGPT 进行文本分类</strong><small>API、提示词、批量预测</small></span><span class="status">已完成</span></button>
@@ -48,7 +48,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
   <div class="group-title">第 5 章 · 文本聚类和主题建模</div>
   <div class="nav-list">
     <button class="nav" data-day="3"><span class="num">03</span><span class="nav-text"><strong>ArXiv 数据集与文档嵌入</strong><small>5.1 数据集、5.2.1 文档嵌入</small></span><span class="status">已完成</span></button>
-    <button class="nav" data-day="4"><span class="num">04</span><span class="nav-text"><strong>嵌入向量降维</strong><small>5.2.2 · UMAP 与 PCA</small></span></button>
+    <button class="nav" data-day="4"><span class="num">04</span><span class="nav-text"><strong>嵌入向量降维</strong><small>5.2.2 · UMAP 与 PCA</small></span><span class="status">已完成</span></button>
     <button class="nav" data-day="5"><span class="num">05</span><span class="nav-text"><strong>向量聚类与簇检查</strong><small>5.2.3–5.2.4 · HDBSCAN 等</small></span></button>
   </div>
   <div class="group-title">后续章节</div>
@@ -408,7 +408,7 @@ window.StudyNotes={
   }
 };
 document.getElementById('sidebarToggle').addEventListener('click',()=>document.querySelector('.app').classList.toggle('sidebar-collapsed'));
-document.getElementById('openNotes').addEventListener('click',()=>{if(activeDay()==='2'){frame.contentWindow?.document.getElementById('notes')?.scrollIntoView({behavior:'smooth',block:'center'});}else StudyNotes.open()});
+document.getElementById('openNotes').addEventListener('click',()=>{if(['2','3','4'].includes(activeDay())){frame.contentWindow?.document.getElementById('notes')?.scrollIntoView({behavior:'smooth',block:'center'});}else StudyNotes.open()});
 document.getElementById('closeNotes').addEventListener('click',()=>StudyNotes.close());
 document.getElementById('notesPanel').addEventListener('click',e=>{if(e.target.id==='notesPanel')StudyNotes.close()});
 document.getElementById('exportNotes').addEventListener('click',()=>{
@@ -431,13 +431,17 @@ function loadDay(d){
     frame.style.display='block';empty.style.display='none';
     frame.removeAttribute('srcdoc');frame.src='day3.html';
     crumb.textContent='学习笔记 / Day 3 / ArXiv 数据集与文档嵌入';
+  }else if(d==='4'){
+    frame.style.display='block';empty.style.display='none';
+    frame.removeAttribute('srcdoc');frame.src='day4.html';
+    crumb.textContent='学习笔记 / Day 4 / 嵌入向量降维';
   }else{
     frame.style.display='none';empty.style.display='flex';
     document.getElementById('emptyTitle').textContent='Day '+d+' · 内容待更新';
     document.getElementById('emptyDesc').textContent='这一天的学习内容尚未整理。继续学习后将加入对应笔记。';
     crumb.textContent='学习笔记 / Day '+d+' / 待更新';
   }
-  document.getElementById('openNotes').textContent=(d==='2'||d==='3')?'批注：正文底部':'批注（'+StudyNotes.getAnnotations('1').length+'）';
+  document.getElementById('openNotes').textContent=(['2','3','4'].includes(d))?'批注：正文底部':'批注（'+StudyNotes.getAnnotations('1').length+'）';
   StudyNotes.refreshCount();
 }
 document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>loadDay(btn.dataset.day)));
