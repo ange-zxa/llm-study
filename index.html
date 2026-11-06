@@ -63,7 +63,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
   </div>
 </aside>
 <main>
-  <div class="topbar"><div class="left-actions"><button id="sidebarToggle" type="button" aria-label="收起或展开目录">☰ 目录</button><div class="crumb" id="crumb">学习笔记 / Day 1 / 使用 ChatGPT 进行文本分类</div></div><div class="top-actions"><button id="openNotes" type="button">批注（<span id="noteCount">0</span>）</button><a href="javascript:window.print()">打印 / 保存 PDF</a></div></div>
+  <div class="topbar"><div class="left-actions"><button id="sidebarToggle" type="button" aria-label="收起或展开目录">☰ 目录</button><div class="crumb" id="crumb">学习笔记 / Day 1 / 使用 ChatGPT 进行文本分类</div></div><div class="top-actions"><button id="openNotes" type="button"><span id="openNotesLabel">批注</span>（<span id="noteCount">0</span>）</button><a href="javascript:window.print()">打印 / 保存 PDF</a></div></div>
   <div class="viewer" id="viewer">
     <iframe id="noteFrame" title="Day 1 学习笔记" srcdoc="&lt;!doctype html&gt;
 &lt;html lang=&quot;zh-CN&quot;&gt;
@@ -387,12 +387,13 @@ window.StudyNotes={
   getAnnotation(day,id){return this.getAnnotations(day).find(n=>n.id===id)},
   saveAnnotation(day,note){const data=readStore();data[day]=data[day]||[];note.id='note-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);data[day].push(note);if(!writeStore(data))throw new Error('浏览器未允许保存本地数据，请检查网站的存储权限或退出无痕模式后重试。');this.render();return note},
   deleteAnnotation(day,id){const data=readStore();data[day]=(data[day]||[]).filter(n=>n.id!==id);writeStore(data);this.render();},
-  refreshCount(){const n=this.getAnnotations(activeDay()).length;document.getElementById('noteCount').textContent=n;},
+  refreshCount(){const n=this.getAnnotations(activeDay()).length;const count=document.getElementById('noteCount');if(count)count.textContent=n;},
   open(){document.getElementById('notesPanel').classList.add('open');document.getElementById('notesPanel').setAttribute('aria-hidden','false');this.render();},
   close(){document.getElementById('notesPanel').classList.remove('open');document.getElementById('notesPanel').setAttribute('aria-hidden','true');},
   render(){
     const day=activeDay(),notes=this.getAnnotations(day),body=document.getElementById('notesBody');
-    document.getElementById('noteCount').textContent=notes.length;
+    const count=document.getElementById('noteCount');if(count)count.textContent=notes.length;
+    if(!body)return;
     if(!notes.length){body.innerHTML='<div class="empty-notes">还没有批注。<br>在笔记正文中选中任意一段文字，点击出现的「＋ 添加批注」即可。</div>';return;}
     body.innerHTML='';
     notes.slice().sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)).forEach(n=>{
@@ -441,7 +442,7 @@ function loadDay(d){
     document.getElementById('emptyDesc').textContent='这一天的学习内容尚未整理。继续学习后将加入对应笔记。';
     crumb.textContent='学习笔记 / Day '+d+' / 待更新';
   }
-  document.getElementById('openNotes').textContent=(['2','3','4'].includes(d))?'批注：正文底部':'批注（'+StudyNotes.getAnnotations('1').length+'）';
+  const notesLabel=document.getElementById('openNotesLabel');if(notesLabel)notesLabel.textContent='批注';
   StudyNotes.refreshCount();
 }
 document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>loadDay(btn.dataset.day)));
