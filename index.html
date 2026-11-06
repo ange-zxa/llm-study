@@ -408,7 +408,7 @@ window.StudyNotes={
   }
 };
 document.getElementById('sidebarToggle').addEventListener('click',()=>document.querySelector('.app').classList.toggle('sidebar-collapsed'));
-document.getElementById('openNotes').addEventListener('click',()=>{if(['2','3','4'].includes(activeDay())){frame.contentWindow?.document.getElementById('notes')?.scrollIntoView({behavior:'smooth',block:'center'});}else StudyNotes.open()});
+document.getElementById('openNotes').addEventListener('click',()=>StudyNotes.open());
 document.getElementById('closeNotes').addEventListener('click',()=>StudyNotes.close());
 document.getElementById('notesPanel').addEventListener('click',e=>{if(e.target.id==='notesPanel')StudyNotes.close()});
 document.getElementById('exportNotes').addEventListener('click',()=>{
