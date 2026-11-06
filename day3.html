@@ -49,6 +49,7 @@ embeddings = embedding_model.encode(
 <div id="annotationEditor" class="annotation-ui" data-annotation-ui>
   <h3>添加批注</h3><div class="quote" id="annotationQuote"></div>
   <textarea id="annotationText" placeholder="写下你的理解、疑问或补充"></textarea>
+  <div id="annotationStatus" role="status" style="font-size:12px;color:#b45309;min-height:18px;margin-top:6px"></div>
   <div class="annotation-buttons"><button id="annotationCancel">取消</button><button id="annotationSave" class="primary">保存批注</button></div>
 </div>
 <div id="annotationBubble" class="annotation-ui" data-annotation-ui>
@@ -116,7 +117,7 @@ embeddings = embedding_model.encode(
   }
   function hideAction(){action.style.display='none';}
   function openEditor(){
-    if(!pending)return;quoteBox.textContent=pending.quote;noteInput.value='';
+    if(!pending)return;quoteBox.textContent=pending.quote;noteInput.value='';document.getElementById('annotationStatus').textContent='';
     editor.style.display='block';bubble.style.display='none';noteInput.focus();hideAction();
   }
   function closeEditor(){editor.style.display='none';pending=null;}
@@ -134,12 +135,17 @@ embeddings = embedding_model.encode(
   action.addEventListener('click',openEditor);
   document.getElementById('annotationCancel').addEventListener('click',closeEditor);
   document.getElementById('annotationSave').addEventListener('click',()=>{
-    const text=noteInput.value.trim();if(!text){noteInput.focus();return;}
-    if(!pending)return;
+    const text=noteInput.value.trim();if(!text){noteInput.focus();document.getElementById('annotationStatus').textContent='请先填写批注内容。';return;}
+    if(!pending){document.getElementById('annotationStatus').textContent='没有捕获到选中的原文，请重新选择文字。';return;}
     const note={...pending,note:text,createdAt:new Date().toISOString()};
-    const saved=window.parent.StudyNotes.saveAnnotation(day,note);
-    closeEditor();window.getSelection().removeAllRanges();
-    if(saved){wrapNote(saved);window.parent.StudyNotes.refreshCount();}
+    try{
+      const saved=window.parent.StudyNotes.saveAnnotation(day,note);
+      if(!saved)throw new Error('保存接口没有返回结果。');
+      wrapNote(saved);window.parent.StudyNotes.refreshCount();
+      closeEditor();window.getSelection().removeAllRanges();
+    }catch(err){
+      document.getElementById('annotationStatus').textContent='保存失败：'+(err&&err.message?err.message:'未知错误');
+    }
   });
   document.getElementById('annotationBubbleClose').addEventListener('click',()=>bubble.style.display='none');
   root.addEventListener('click',e=>{
