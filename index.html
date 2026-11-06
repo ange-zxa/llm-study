@@ -77,11 +77,17 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
 .wrap{max-width:1060px;margin:0 auto;padding:34px 22px 72px}.hero{background:linear-gradient(135deg,#eff6ff,#fff 65%);border:1px solid #dbeafe;border-radius:24px;padding:34px 38px;box-shadow:var(--shadow)}.eyebrow{font-size:13px;letter-spacing:.08em;color:var(--blue);font-weight:700}.hero h1{font-size:clamp(28px,4vw,40px);line-height:1.25;margin:12px 0}.sub{color:var(--muted);margin:0}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.pill{font-size:13px;padding:5px 11px;border-radius:999px;background:#fff;border:1px solid var(--line);color:#475569}
 .layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:24px;margin-top:24px}.toc{position:sticky;top:18px;align-self:start;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}.toc strong{display:block;margin-bottom:10px}.toc a{display:block;text-decoration:none;color:#475569;font-size:14px;padding:6px 0}.toc a:hover{color:var(--blue)}main{min-width:0}.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow)}h2{font-size:23px;margin:0 0 14px;line-height:1.4}h3{font-size:18px;margin:22px 0 8px}p{margin:10px 0}ul,ol{padding-left:1.4em}li{margin:5px 0}.muted{color:var(--muted)}.small{font-size:13px;color:var(--muted)}.callout{padding:15px 17px;border-radius:12px;background:var(--bluebg);border-left:4px solid var(--blue);margin:14px 0}.good{background:var(--greenbg);border-left-color:var(--green)}.warn{background:var(--amberbg);border-left-color:#d97706}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mini{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}.mini h3{margin:0 0 6px}.tag{font-size:12px;font-weight:700;color:var(--blue)}pre{background:var(--code);color:#e5e7eb;padding:18px;border-radius:13px;overflow:auto;font-size:13px;line-height:1.65;margin:12px 0}code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}p code,li code{background:#f1f5f9;color:#0f172a;padding:2px 5px;border-radius:5px}table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}th{background:#f8fafc;color:#334155}.flow{display:flex;align-items:stretch;gap:9px;flex-wrap:wrap;margin:16px 0}.step{flex:1 1 130px;border:1px solid var(--line);border-radius:12px;padding:13px;text-align:center;background:#fff}.arrow{align-self:center;color:#94a3b8;font-size:22px}.qa{border:1px solid var(--line);border-radius:12px;padding:15px;margin:10px 0}.qa summary{cursor:pointer;font-weight:650}.answer{color:#475569;margin-top:9px}.footer{color:var(--muted);font-size:13px;text-align:center;padding:22px}.btn{display:inline-block;text-decoration:none;border:1px solid #bfdbfe;color:#1d4ed8;background:#eff6ff;padding:8px 13px;border-radius:9px;font-size:13px}@media(max-width:800px){.layout{grid-template-columns:1fr}.toc{position:static}.grid2{grid-template-columns:1fr}.hero{padding:26px 22px}.card{padding:21px 19px}.arrow{display:none}}@media print{body{background:#fff}.wrap{max-width:none;padding:0}.hero,.card,.toc{box-shadow:none}.layout{display:block}.toc{display:none}.card{break-inside:avoid}.hero{margin-bottom:18px}.btn{display:none}}
 
-/* Inline annotations */
-.annotation-highlight{background:#fff0a8;color:inherit;border-radius:3px;box-shadow:0 0 0 1px rgba(202,138,4,.18);cursor:pointer;padding:1px 0;text-decoration:underline;text-decoration-color:#d69e18;text-decoration-thickness:1px;text-underline-offset:3px}
-.annotation-highlight:hover{background:#ffe27a}
+/* Selection actions: highlight and annotation are visually distinct */
+.annotation-mark{display:inline;border-radius:2px;padding:0 1px}
+.annotation-highlight{background:#ffe89a!important;color:inherit!important;text-decoration:none!important;box-shadow:none!important;cursor:inherit}
+.annotation-underline{background:transparent!important;color:inherit!important;text-decoration:underline!important;text-decoration-color:#2563eb!important;text-decoration-thickness:1.5px!important;text-underline-offset:3px!important;cursor:pointer}
+.annotation-underline:hover{text-decoration-thickness:2px!important}
 .annotation-ui{font:14px/1.5 -apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;color:#172033}
-#annotationAction{position:fixed;z-index:99999;display:none;border:0;border-radius:999px;padding:9px 14px;background:#1d4ed8;color:#fff;box-shadow:0 8px 24px rgba(15,23,42,.2);font-weight:700;cursor:pointer}
+.annotation-toolbar{position:fixed;z-index:99999;display:none;align-items:center;gap:6px;padding:6px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.2);width:max-content;max-width:calc(100vw - 16px)}
+.annotation-toolbar button{border:1px solid #d0d5dd;background:#fff;border-radius:8px;padding:7px 11px;cursor:pointer;font:600 13px/1.3 inherit;white-space:nowrap}
+.annotation-toolbar #makeHighlight{background:#fff4c2;border-color:#e6c65c}
+.annotation-toolbar #makeAnnotation{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+#annotationToolbarStatus{font-size:11px;color:#b45309;max-width:180px}
 #annotationEditor,#annotationBubble{position:fixed;z-index:99998;display:none;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));background:#fff;border:1px solid #dbe3ef;border-radius:16px;padding:15px;box-shadow:0 16px 45px rgba(15,23,42,.2)}
 #annotationEditor h3,#annotationBubble h3{font-size:15px;margin:0 0 8px}
 #annotationEditor textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #d0d5dd;border-radius:10px;padding:10px;font:14px/1.6 inherit;outline:none}
@@ -92,7 +98,6 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
 #annotationBubble .quote{font-size:12px;color:#64748b;background:#f8fafc;padding:8px;border-radius:8px;margin:8px 0;max-height:72px;overflow:auto}
 #annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
-
 &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
@@ -270,99 +275,145 @@ messages = [
 &lt;/main&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;div id=&quot;annotationAction&quot; class=&quot;annotation-ui&quot;&gt;＋ 添加批注&lt;/div&gt;
-&lt;div id=&quot;annotationEditor&quot; class=&quot;annotation-ui&quot;&gt;
-  &lt;h3&gt;添加批注&lt;/h3&gt;
-  &lt;div id=&quot;annotationQuote&quot; class=&quot;quote&quot; style=&quot;font-size:12px;color:#667085;background:#f8fafc;padding:8px;border-radius:8px;margin:8px 0;max-height:72px;overflow:auto&quot;&gt;&lt;/div&gt;
-  &lt;textarea id=&quot;annotationText&quot; placeholder=&quot;写下你的理解、疑问或补充……&quot;&gt;&lt;/textarea&gt;
+&lt;div id=&quot;annotationAction&quot; class=&quot;annotation-ui annotation-toolbar&quot; data-annotation-ui&gt;
+  &lt;button id=&quot;makeHighlight&quot; type=&quot;button&quot; title=&quot;只给选中文字添加颜色&quot;&gt;高亮&lt;/button&gt;
+  &lt;button id=&quot;makeAnnotation&quot; type=&quot;button&quot; title=&quot;给选中文字添加下划线并写批注&quot;&gt;添加批注&lt;/button&gt;
+  &lt;span id=&quot;annotationToolbarStatus&quot; role=&quot;status&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;div id=&quot;annotationEditor&quot; class=&quot;annotation-ui&quot; data-annotation-ui&gt;
+  &lt;h3&gt;添加批注&lt;/h3&gt;&lt;div class=&quot;quote&quot; id=&quot;annotationQuote&quot;&gt;&lt;/div&gt;
+  &lt;textarea id=&quot;annotationText&quot; placeholder=&quot;写下你的理解、疑问或补充&quot;&gt;&lt;/textarea&gt;
+  &lt;div id=&quot;annotationStatus&quot; role=&quot;status&quot; style=&quot;font-size:12px;color:#b45309;min-height:18px;margin-top:6px&quot;&gt;&lt;/div&gt;
   &lt;div class=&quot;annotation-buttons&quot;&gt;&lt;button id=&quot;annotationCancel&quot; type=&quot;button&quot;&gt;取消&lt;/button&gt;&lt;button id=&quot;annotationSave&quot; class=&quot;primary&quot; type=&quot;button&quot;&gt;保存批注&lt;/button&gt;&lt;/div&gt;
 &lt;/div&gt;
-&lt;div id=&quot;annotationBubble&quot; class=&quot;annotation-ui&quot;&gt;
-  &lt;div style=&quot;display:flex;align-items:center;justify-content:space-between;gap:10px&quot;&gt;&lt;h3&gt;批注&lt;/h3&gt;&lt;button id=&quot;annotationBubbleClose&quot; type=&quot;button&quot; style=&quot;border:0;background:transparent;font-size:20px;cursor:pointer&quot;&gt;×&lt;/button&gt;&lt;/div&gt;
+&lt;div id=&quot;annotationBubble&quot; class=&quot;annotation-ui&quot; data-annotation-ui&gt;
+  &lt;div style=&quot;display:flex;justify-content:space-between;align-items:center&quot;&gt;&lt;h3&gt;这段文字的批注&lt;/h3&gt;&lt;button id=&quot;annotationBubbleClose&quot; type=&quot;button&quot; style=&quot;border:0;background:transparent;font-size:20px;cursor:pointer&quot;&gt;×&lt;/button&gt;&lt;/div&gt;
   &lt;div id=&quot;annotationBubbleQuote&quot; class=&quot;quote&quot;&gt;&lt;/div&gt;&lt;div id=&quot;annotationBubbleText&quot; class=&quot;note-body&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 &lt;script&gt;
 (()=&gt;{
  const init=()=&gt;{
-  const root=document.querySelector(&#x27;.layout &gt; main&#x27;);
-  if(!root || !window.parent) return;
-  if(!window.parent.StudyNotes){setTimeout(init,25);return;}
-  const action=document.getElementById(&#x27;annotationAction&#x27;);
-  const editor=document.getElementById(&#x27;annotationEditor&#x27;);
-  const bubble=document.getElementById(&#x27;annotationBubble&#x27;);
-  const quoteBox=document.getElementById(&#x27;annotationQuote&#x27;);
-  const noteInput=document.getElementById(&#x27;annotationText&#x27;);
+  const root=document.querySelector('.wrap')||document.querySelector('.layout &gt; main');
+  if(!root||!window.parent){return;}
+  if(!window.parent.StudyNotes){setTimeout(init,30);return;}
+  const action=document.getElementById('annotationAction');
+  const editor=document.getElementById('annotationEditor');
+  const bubble=document.getElementById('annotationBubble');
+  const quoteBox=document.getElementById('annotationQuote');
+  const noteInput=document.getElementById('annotationText');
+  const toolbarStatus=document.getElementById('annotationToolbarStatus');
   let pending=null;
-  const day=&#x27;1&#x27;;
+  const day='1';
   function textNodes(){
-    const out=[]; const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
-      if(!n.nodeValue || !n.nodeValue.length) return NodeFilter.FILTER_REJECT;
-      if(n.parentElement &amp;&amp; n.parentElement.closest(&#x27;[data-annotation-ui],script,style&#x27;)) return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
-    }});
-    let n; while(n=walker.nextNode()) out.push(n); return out;
+   const out=[],walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
+    if(!n.nodeValue||!n.nodeValue.length)return NodeFilter.FILTER_REJECT;
+    if(n.parentElement&amp;&amp;n.parentElement.closest('[data-annotation-ui],script,style'))return NodeFilter.FILTER_REJECT;
+    return NodeFilter.FILTER_ACCEPT;
+   }});
+   let n;while(n=walker.nextNode())out.push(n);return out;
   }
   function offsetsFromRange(range){
-    const a=document.createRange();a.selectNodeContents(root);a.setEnd(range.startContainer,range.startOffset);
-    const b=document.createRange();b.selectNodeContents(root);b.setEnd(range.endContainer,range.endOffset);
-    return {start:a.toString().length,end:b.toString().length,quote:range.toString()};
+   const a=document.createRange();a.selectNodeContents(root);a.setEnd(range.startContainer,range.startOffset);
+   const b=document.createRange();b.selectNodeContents(root);b.setEnd(range.endContainer,range.endOffset);
+   return {start:a.toString().length,end:b.toString().length,quote:range.toString()};
   }
   function rangeFromOffsets(start,end){
-    const nodes=textNodes();let total=0,startNode=null,endNode=null,startOffset=0,endOffset=0;
-    for(const n of nodes){const next=total+n.nodeValue.length;
-      if(!startNode &amp;&amp; start&gt;=total &amp;&amp; start&lt;=next){startNode=n;startOffset=start-total;}
-      if(!endNode &amp;&amp; end&gt;=total &amp;&amp; end&lt;=next){endNode=n;endOffset=end-total;break;}
-      total=next;
-    }
-    if(!startNode || !endNode) return null;
-    const r=document.createRange();try{r.setStart(startNode,startOffset);r.setEnd(endNode,endOffset);return r;}catch(e){return null;}
+   const nodes=textNodes();let total=0,startNode=null,endNode=null,startOffset=0,endOffset=0;
+   for(const n of nodes){const next=total+n.nodeValue.length;
+    if(!startNode&amp;&amp;start&gt;=total&amp;&amp;start&lt;=next){startNode=n;startOffset=start-total;}
+    if(!endNode&amp;&amp;end&gt;=total&amp;&amp;end&lt;=next){endNode=n;endOffset=end-total;break;}
+    total=next;
+   }
+   if(!startNode||!endNode)return null;
+   const r=document.createRange();try{r.setStart(startNode,startOffset);r.setEnd(endNode,endOffset);return r;}catch(e){return null;}
   }
-  function wrapNote(note){
-    const r=rangeFromOffsets(note.start,note.end);if(!r || !r.toString()) return;
-    const mark=document.createElement(&#x27;mark&#x27;);mark.className=&#x27;annotation-highlight&#x27;;mark.dataset.noteId=note.id;mark.title=&#x27;点击查看批注&#x27;;
-    try{const contents=r.extractContents();mark.appendChild(contents);r.insertNode(mark);}catch(e){}
+  function wrapRecord(record){
+   const r=rangeFromOffsets(record.start,record.end);if(!r||!r.toString())return;
+   if(record.quote&amp;&amp;r.toString()!==record.quote)return;
+   const isHighlight=record.type==='highlight';
+   const mark=document.createElement('mark');
+   mark.className='annotation-mark '+(isHighlight?'annotation-highlight':'annotation-underline');
+   mark.dataset.noteId=record.id;mark.dataset.noteType=isHighlight?'highlight':'annotation';
+   mark.title=isHighlight?'文本高亮':'点击查看批注';
+   try{const contents=r.extractContents();mark.appendChild(contents);r.insertNode(mark);}catch(e){}
   }
   function restore(){
-    const notes=window.parent.StudyNotes.getAnnotations(day).slice().sort((a,b)=&gt;a.start-b.start);
-    notes.forEach(wrapNote);
+   const records=window.parent.StudyNotes.getAnnotations(day).filter(n=&gt;Number.isFinite(n.start)&amp;&amp;Number.isFinite(n.end)).slice().sort((a,b)=&gt;a.start-b.start);
+   records.forEach(wrapRecord);
   }
-  function hideAction(){action.style.display=&#x27;none&#x27;;}
+  function unwrapAll(){root.querySelectorAll('mark.annotation-mark').forEach(m=&gt;m.replaceWith(...Array.from(m.childNodes)));}
+  function refresh(){unwrapAll();restore();}
+  function hideAction(){action.style.display='none';}
+  function clearSelection(){const sel=window.getSelection();if(sel)sel.removeAllRanges();}
+  function showError(message){toolbarStatus.textContent=message;action.style.display='flex';}
+  function saveRecord(record){
+   const saved=window.parent.StudyNotes.saveAnnotation(day,record);
+   if(!saved)throw new Error('保存接口没有返回结果。');
+   wrapRecord(saved);window.parent.StudyNotes.refreshCount();clearSelection();hideAction();pending=null;
+   return saved;
+  }
   function openEditor(){
-    if(!pending)return;quoteBox.textContent=pending.quote;noteInput.value=&#x27;&#x27;;editor.style.display=&#x27;block&#x27;;bubble.style.display=&#x27;none&#x27;;noteInput.focus();hideAction();
+   if(!pending)return;
+   quoteBox.textContent=pending.quote;noteInput.value='';
+   document.getElementById('annotationStatus').textContent='';
+   editor.style.display='block';bubble.style.display='none';hideAction();noteInput.focus();
   }
-  function closeEditor(){editor.style.display=&#x27;none&#x27;;pending=null;}
-  document.addEventListener(&#x27;mouseup&#x27;,e=&gt;{
-    if(e.target.closest &amp;&amp; e.target.closest(&#x27;.annotation-ui&#x27;)) return;
-    const sel=window.getSelection();if(!sel || sel.isCollapsed || !sel.toString().trim()){hideAction();return;}
-    const r=sel.getRangeAt(0);if(!root.contains(r.commonAncestorContainer))return;
-    pending=offsetsFromRange(r);
-    const rect=r.getBoundingClientRect();action.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-130))+&#x27;px&#x27;;action.style.top=Math.max(8,Math.min(rect.bottom+8,window.innerHeight-48))+&#x27;px&#x27;;action.style.display=&#x27;block&#x27;;
+  function closeEditor(){editor.style.display='none';pending=null;}
+  document.addEventListener('mouseup',e=&gt;{
+   if(e.target.closest&amp;&amp;e.target.closest('[data-annotation-ui]'))return;
+   const sel=window.getSelection();
+   if(!sel||sel.isCollapsed||!sel.toString().trim()){hideAction();return;}
+   const r=sel.getRangeAt(0);if(!root.contains(r.commonAncestorContainer))return;
+   pending=offsetsFromRange(r);toolbarStatus.textContent='';
+   const rect=r.getBoundingClientRect();
+   action.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-250))+'px';
+   action.style.top=Math.max(8,Math.min(rect.bottom+8,window.innerHeight-50))+'px';
+   action.style.display='flex';
   });
-  action.addEventListener(&#x27;mousedown&#x27;,e=&gt;e.preventDefault());
-  action.addEventListener(&#x27;click&#x27;,openEditor);
-  document.getElementById(&#x27;annotationCancel&#x27;).addEventListener(&#x27;click&#x27;,closeEditor);
-  document.getElementById(&#x27;annotationSave&#x27;).addEventListener(&#x27;click&#x27;,()=&gt;{
-    const text=noteInput.value.trim();if(!text){noteInput.focus();return;}
-    if(!pending)return;
-    const note={...pending,note:text,createdAt:new Date().toISOString()};
-    const saved=window.parent.StudyNotes.saveAnnotation(day,note);
-    closeEditor();window.getSelection().removeAllRanges();
-    if(saved){wrapNote(saved);window.parent.StudyNotes.refreshCount();}
+  action.addEventListener('mousedown',e=&gt;e.preventDefault());
+  document.getElementById('makeHighlight').addEventListener('click',()=&gt;{
+   if(!pending)return;
+   try{saveRecord({...pending,type:'highlight',note:'',createdAt:new Date().toISOString()});}
+   catch(err){showError('高亮保存失败：'+(err&amp;&amp;err.message?err.message:'未知错误'));}
   });
-  document.getElementById(&#x27;annotationBubbleClose&#x27;).addEventListener(&#x27;click&#x27;,()=&gt;bubble.style.display=&#x27;none&#x27;);
-  root.addEventListener(&#x27;click&#x27;,e=&gt;{
-    const mark=e.target.closest &amp;&amp; e.target.closest(&#x27;mark[data-note-id]&#x27;);if(!mark)return;
-    const note=window.parent.StudyNotes.getAnnotation(day,mark.dataset.noteId);if(!note)return;
-    document.getElementById(&#x27;annotationBubbleQuote&#x27;).textContent=note.quote;
-    document.getElementById(&#x27;annotationBubbleText&#x27;).textContent=note.note;
-    bubble.style.display=&#x27;block&#x27;;
+  document.getElementById('makeAnnotation').addEventListener('click',openEditor);
+  document.getElementById('annotationCancel').addEventListener('click',closeEditor);
+  document.getElementById('annotationSave').addEventListener('click',()=&gt;{
+   const text=noteInput.value.trim();
+   if(!text){noteInput.focus();document.getElementById('annotationStatus').textContent='请先填写批注内容。';return;}
+   if(!pending){document.getElementById('annotationStatus').textContent='没有捕获到选中的原文，请重新选择文字。';return;}
+   try{
+    saveRecord({...pending,type:'annotation',note:text,createdAt:new Date().toISOString()});
+    editor.style.display='none';bubble.style.display='none';
+   }catch(err){document.getElementById('annotationStatus').textContent='保存失败：'+(err&amp;&amp;err.message?err.message:'未知错误');}
+  });
+  document.getElementById('annotationBubbleClose').addEventListener('click',()=&gt;bubble.style.display='none');
+  root.addEventListener('click',e=&gt;{
+   const mark=e.target.closest&amp;&amp;e.target.closest('mark[data-note-id]');if(!mark||mark.dataset.noteType==='highlight')return;
+   const record=window.parent.StudyNotes.getAnnotation(day,mark.dataset.noteId);if(!record)return;
+   document.getElementById('annotationBubbleQuote').textContent=record.quote;
+   document.getElementById('annotationBubbleText').textContent=record.note||'';
+   bubble.style.display='block';
   });
   window.focusAnnotation=function(id){
-    const mark=root.querySelector(&#x27;mark[data-note-id=&quot;&#x27;+CSS.escape(id)+&#x27;&quot;]&#x27;);if(mark){mark.scrollIntoView({behavior:&#x27;smooth&#x27;,block:&#x27;center&#x27;});mark.click();}
+   const mark=root.querySelector('mark[data-note-id=&quot;'+CSS.escape(id)+'&quot;]');
+   if(mark){mark.scrollIntoView({behavior:'smooth',block:'center'});if(mark.dataset.noteType!=='highlight')mark.click();}
   };
   window.restoreAnnotations=restore;
-  window.refreshAnnotations=()=&gt;{root.querySelectorAll(&#x27;mark.annotation-highlight&#x27;).forEach(m=&gt;m.replaceWith(...Array.from(m.childNodes)));restore();};
-  restore();
+  window.refreshAnnotations=refresh;
+  function migrateLegacy(){
+   const key='llm-study-day'+day+'-notes-v1';let legacy=[];
+   try{legacy=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){legacy=[];}
+   if(!Array.isArray(legacy)||!legacy.length)return;
+   const source=textNodes().map(n=&gt;n.nodeValue).join('');let cursor=0;
+   legacy.forEach(old=&gt;{
+    if(!old||!old.quote||!old.note)return;
+    let start=source.indexOf(old.quote,cursor);if(start&lt;0)start=source.indexOf(old.quote);
+    if(start&gt;=0){window.parent.StudyNotes.saveAnnotation(day,{quote:old.quote,start,end:start+old.quote.length,type:'annotation',note:old.note,createdAt:old.time||new Date().toISOString()});cursor=start+old.quote.length;}
+   });
+   localStorage.removeItem(key);
+  }
+  migrateLegacy();restore();
  };
  init();
 })();
