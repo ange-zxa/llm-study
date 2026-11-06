@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 3｜ArXiv 数据集与文档嵌入</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#192238;font:16px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.wrap{max-width:900px;margin:auto;padding:28px 20px 90px}header,section{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:26px 32px;margin-bottom:18px}header{background:linear-gradient(120deg,#eaf2ff,#fff)}h1{font-size:30px;line-height:1.35;margin:8px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:17px;margin:20px 0 8px}.muted,small{color:#64748b}.pill{display:inline-block;color:#1d4ed8;background:#dbeafe;border-radius:20px;padding:2px 10px;font-size:13px}.call{background:#eff6ff;padding:12px 16px;border-left:4px solid #2563eb;border-radius:8px;margin:14px 0}.good{background:#f0fdf4;border-left-color:#16a34a}pre{background:#101827;color:#e2e8f0;padding:16px;border-radius:12px;white-space:pre-wrap;overflow:auto;font-size:13px;line-height:1.7}code{font-family:ui-monospace,Consolas,monospace}p code{background:#e9eef5;padding:1px 4px;border-radius:4px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e7eb;padding:9px;text-align:left}th{background:#f8fafc}.flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.step{flex:1 1 140px;border:1px solid #dbe2ea;border-radius:12px;padding:14px;text-align:center;background:#fff}.arrow{color:#94a3b8;font-size:22px}details{border:1px solid #dbe2ea;padding:12px 16px;border-radius:12px;margin:8px 0}summary{cursor:pointer;font-weight:600}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button,#editor button{border:1px solid #cbd5e1;background:white;border-radius:8px;padding:7px 12px;cursor:pointer}#notes{display:none;background:#eff6ff;padding:12px;border-radius:10px;margin-top:12px}.note{border-bottom:1px solid #dbe2ea;padding:8px 0;white-space:pre-wrap}#annotate{display:none;position:fixed;bottom:16px;right:16px;z-index:10;background:#1d4ed8;color:white;border:0;border-radius:10px;padding:10px 15px;cursor:pointer}#editor{display:none;position:fixed;bottom:18px;right:18px;width:min(360px,calc(100vw - 36px));z-index:20;background:white;box-shadow:0 12px 45px #0003;padding:20px;border:1px solid #ddd;border-radius:14px}#editor textarea{width:100%;height:100px;padding:10px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:600px){header,section{padding:20px}.wrap{padding:14px}}</style></head>
+<body><div class="wrap">
+<header><span class="pill">DAY 3 · 每日学习</span><h1>ArXiv 数据集与文档嵌入</h1><p>《图解大模型：生成式 AI 原理与实战》｜第5章 5.1、5.2.1</p><small>原书第115–116页｜预计 30–40 分钟</small></header>
+<section><h2>01｜今天要解决的问题</h2><p>第5章要把大量学术摘要自动分组。今天先完成两件事：读懂实验数据从哪里来；理解如何把每篇摘要转换成一个数值向量。</p><div class="call">先记住整体思路：一篇文章是一份文档；嵌入模型把文档变成向量；后续算法再根据向量之间的关系寻找文档簇。</div></section>
+<section><h2>02｜5.1 ArXiv 文章：计算与语言</h2><p>原书使用 ArXiv 上计算与语言（cs.CL）领域的文章做实验。ArXiv 是面向计算机科学、数学和物理等领域的开放学术文章平台。书中所用的 <code>arxiv_nlp</code> 数据集包含 <b>1991—2024 年</b> ArXiv cs.CL 板块的 <b>44,949 篇摘要</b>。</p><p>为什么选择摘要？本章需要比较文章讨论的内容。摘要是文章内容的文本表达，可以作为后续语义嵌入的输入。标题等元数据则可以帮助识别、查看对应文章。</p><h3>原书代码：加载数据集</h3><pre><code># 从 Hugging Face 加载数据
+from datasets import load_dataset
+dataset = load_dataset("maartengr/arxiv_nlp")["train"]
+
+# 提取元数据
+abstracts = dataset["Abstracts"]
+titles = dataset["Titles"]</code></pre><table><tr><th>代码</th><th>含义</th></tr><tr><td><code>load_dataset(...)</code></td><td>从 Hugging Face datasets 加载指定数据集</td></tr><tr><td><code>["train"]</code></td><td>取出该数据集提供的 train 数据分区</td></tr><tr><td><code>dataset["Abstracts"]</code></td><td>取出所有文章摘要，形成摘要列表</td></tr><tr><td><code>dataset["Titles"]</code></td><td>取出所有文章标题</td></tr></table><p class="call">这里的 <code>abstracts</code> 是后续嵌入模型的主要输入。书中说明还会为每篇文章的年份创建变量，但本页展示的代码片段明确列出的只有摘要和标题提取。</p></section>
+<section><h2>03｜5.2 文本聚类的通用流程</h2><p>原书将当前常见的通用文本聚类流程归纳为三步，每一步对应一种算法：</p><div class="flow"><div class="step"><b>① 嵌入模型</b><br>输入文档 → 嵌入向量</div><div class="arrow">→</div><div class="step"><b>② 降维模型</b><br>高维向量 → 低维向量</div><div class="arrow">→</div><div class="step"><b>③ 聚类模型</b><br>向量 → 文档簇</div></div><p>注意这三个模型不是在做同一件事：第一个负责表示文本含义，第二个改变向量所在空间的维度，第三个根据向量分布来分组。</p></section>
+<section><h2>04｜5.2.1 嵌入文档：把文字变成向量</h2><p>嵌入向量（embedding）是试图捕捉文本含义的数值表示。对聚类而言，我们希望语义相似的文档在向量空间中也具有相近的表示，因此原书强调应选择针对语义相似度任务优化的嵌入模型。</p><h3>为什么选 gte-small？</h3><p>原书参考 MTEB 排行榜，选择 <code>thenlper/gte-small</code>：作者认为它在聚类任务上表现不错，而且模型体积较小、推理速度更快。书中将它与上一章使用的 <code>sentence-transformers/all-mpnet-base-v2</code> 作比较。</p><h3>原书代码：生成摘要嵌入</h3><pre><code>from sentence_transformers import SentenceTransformer
+
+# 为每个摘要创建嵌入向量
+embedding_model = SentenceTransformer("thenlper/gte-small")
+embeddings = embedding_model.encode(
+    abstracts, show_progress_bar=True
+)</code></pre><p>逐行理解：</p><ol><li><code>SentenceTransformer(...)</code>：加载指定的句子/文本嵌入模型。</li><li><code>embedding_model</code>：保存加载后的模型对象。</li><li><code>encode(abstracts)</code>：把摘要列表中的文档编码成向量。</li><li><code>show_progress_bar=True</code>：显示处理进度，不改变向量含义。</li></ol></section>
+<section><h2>05｜关键结果：为什么是 (44949, 384)？</h2><pre><code>embeddings.shape
+(44949, 384)</code></pre><p>这表示嵌入结果是一个二维矩阵：</p><table><tr><th>维度</th><th>含义</th></tr><tr><td>44,949 行</td><td>对应 44,949 篇文章摘要，每行一个文档向量</td></tr><tr><td>384 列</td><td>每个文档向量包含 384 个数值</td></tr></table><p>可以把它想成一张表：每一行是一篇文章，每一列是这个向量的一个特征维度。注意，384 个数值不是 384 个词，也不是 384 篇文章；它们共同构成这一篇文档的语义表示。</p><div class="call good"><b>关键连接：</b>你之前学过句子嵌入和余弦相似度。这里把每篇文章摘要编码成向量后，就能用向量间的距离或相似度来比较文档，为下一步降维和聚类准备输入。</div></section>
+<section><h2>06｜自测</h2><details><summary>1. 为什么使用摘要而不是直接对文章编号聚类？</summary><p>文章编号只用于标识，不表达文章讨论的语义内容。摘要包含文本内容，嵌入模型才能据此形成语义表示。</p></details><details><summary>2. 44,949 × 384 分别代表什么？</summary><p>44,949 篇摘要，每篇摘要对应一个 384 维向量。</p></details><details><summary>3. 为什么要选择语义相似度表现较好的嵌入模型？</summary><p>聚类的目标是发现语义相似的文档组，嵌入向量应尽量保留文本语义关系。</p></details><details><summary>4. embedding model 和 cluster model 是一回事吗？</summary><p>不是。嵌入模型负责把文档变成向量；聚类模型负责根据向量之间的关系形成簇。</p></details></section>
+<section><h2>个人批注</h2><p class="muted">选中正文任意文字即可添加批注；批注保存在当前浏览器本地，可导出备份。</p><div class="toolbar"><button id="listBtn">查看批注</button><button id="exportBtn">导出 JSON</button></div><div id="notes"></div></section>
+<small>依据用户提供的《图解大模型：生成式 AI 原理与实战》第115–116页整理。概念解释是辅助理解，未将书外方法替换为原书内容。</small>
+</div>
+<button id="annotate">＋ 添加批注</button><div id="editor"><b>添加批注</b><p id="quote"></p><textarea id="noteInput" placeholder="写下理解或疑问"></textarea><div><button id="saveBtn">保存</button><button id="cancelBtn">取消</button></div></div>
+<script>
+(()=>{
+const key='llm-study-day3-notes-v1',btn=document.getElementById('annotate'),ed=document.getElementById('editor'),notes=document.getElementById('notes');let pending=null;
+const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}};
+document.addEventListener('mouseup',e=>{if(e.target.closest('button,#editor,#notes'))return;const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){btn.style.display='none';return}const range=sel.getRangeAt(0);if(!document.querySelector('.wrap').contains(range.commonAncestorContainer))return;pending={quote:sel.toString(),time:new Date().toISOString()};btn.style.display='block'});
+btn.onclick=()=>{if(!pending)return;document.getElementById('quote').textContent='“'+pending.quote+'”';ed.style.display='block';btn.style.display='none'};
+document.getElementById('cancelBtn').onclick=()=>ed.style.display='none';
+document.getElementById('saveBtn').onclick=()=>{const note=document.getElementById('noteInput').value.trim();if(!note)return;const all=read();all.push({...pending,note});try{localStorage.setItem(key,JSON.stringify(all))}catch(e){alert('保存失败，请导出备份或检查浏览器存储权限');return}ed.style.display='none';document.getElementById('noteInput').value='';render()};
+function render(){notes.innerHTML='';for(const n of read()){const d=document.createElement('div');d.className='note';d.textContent='“'+n.quote+'”\n'+n.note;notes.appendChild(d)}}
+document.getElementById('listBtn').onclick=()=>{notes.style.display=notes.style.display==='block'?'none':'block';render()};
+document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(read(),null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='day3-annotations.json';a.click();URL.revokeObjectURL(u)};
+})();
+</script></body></html>
