@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 4｜嵌入向量降维</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#192238;font:16px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.wrap{max-width:900px;margin:auto;padding:28px 20px 90px}header,section{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:26px 32px;margin-bottom:18px}header{background:linear-gradient(120deg,#eaf2ff,#fff)}h1{font-size:30px;line-height:1.35;margin:8px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:17px;margin:20px 0 8px}.muted,small{color:#64748b}.pill{display:inline-block;color:#1d4ed8;background:#dbeafe;border-radius:20px;padding:2px 10px;font-size:13px}.call{background:#eff6ff;padding:12px 16px;border-left:4px solid #2563eb;border-radius:8px;margin:14px 0}.good{background:#f0fdf4;border-left-color:#16a34a}.warn{background:#fff7ed;border-left-color:#ea580c}pre{background:#101827;color:#e2e8f0;padding:16px;border-radius:12px;white-space:pre-wrap;overflow:auto;font-size:13px;line-height:1.7}code{font-family:ui-monospace,Consolas,monospace}p code{background:#e9eef5;padding:1px 4px;border-radius:4px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e7eb;padding:9px;text-align:left}th{background:#f8fafc}.flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.step{flex:1 1 140px;border:1px solid #dbe2ea;border-radius:12px;padding:14px;text-align:center;background:#fff}.arrow{color:#94a3b8;font-size:22px}details{border:1px solid #dbe2ea;padding:12px 16px;border-radius:12px;margin:8px 0}summary{cursor:pointer;font-weight:600}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button,#editor button{border:1px solid #cbd5e1;background:white;border-radius:8px;padding:7px 12px;cursor:pointer}#notes{display:none;background:#eff6ff;padding:12px;border-radius:10px;margin-top:12px}.note{border-bottom:1px solid #dbe2ea;padding:8px 0;white-space:pre-wrap}#annotate{display:none;position:fixed;bottom:16px;right:16px;z-index:10;background:#1d4ed8;color:white;border:0;border-radius:10px;padding:10px 15px;cursor:pointer}#editor{display:none;position:fixed;bottom:18px;right:18px;width:min(360px,calc(100vw - 36px));z-index:20;background:white;box-shadow:0 12px 45px #0003;padding:20px;border:1px solid #ddd;border-radius:14px}#editor textarea{width:100%;height:100px;padding:10px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:600px){header,section{padding:20px}.wrap{padding:14px}}</style></head>
+<body><div class="wrap">
+<header><span class="pill">DAY 4 · 第五章</span><h1>嵌入向量降维：从384维到5维</h1><p>《图解大模型：生成式 AI 原理与实战》｜第5章 5.2.2</p><small>原书第117–118页｜预计 30–40 分钟</small></header>
+<section><h2>01｜先回顾：我们手里已经有什么？</h2><p>Day 3 得到的 <code>embeddings</code> 是一个二维矩阵，形状为 <code>(44949, 384)</code>：44,949 篇摘要，每篇摘要对应一个384维向量。这些向量共同构成文档的语义表示，也是后续聚类要使用的特征。</p><div class="call">今天不再把文本转成向量，而是处理已经得到的向量：把每个文档的384维表示压缩到更低维度。</div></section>
+<section><h2>02｜为什么聚类之前还要降维？</h2><p>原书给出的理由是：随着维度增加，每个维度中可能的取值数量呈指数级增长，在各维度中寻找所有子空间会越来越复杂。因此，高维数据会给许多聚类技术带来困难，使有意义的簇更难识别。</p><p>降维的目标是用更少的维度表示原来的数据，同时尽量保持高维数据的<b>全局结构</b>。原书图5-4用三维空间压缩到二维空间作示意。</p><div class="flow"><div class="step"><b>原始空间</b><br>高维表示<br>384个数值/文档</div><div class="arrow">→</div><div class="step"><b>降维算法</b><br>学习低维表示<br>不是简单删掉列</div><div class="arrow">→</div><div class="step"><b>压缩空间</b><br>低维表示<br>5个数值/文档</div></div><div class="call warn"><b>重要：</b>降维不是随意删除某些维度。它是一种压缩技术，底层算法会寻找低维表示；但压缩不可能完美无损，会损失一部分信息。因此要在降低维度与尽可能保留信息之间取得平衡。</div></section>
+<section><h2>03｜PCA 和 UMAP：书中为什么选择 UMAP？</h2><p>原书列举了两种著名的降维方法：</p><table><tr><th>方法</th><th>英文全称</th><th>本节中的定位</th></tr><tr><td>PCA</td><td>Principal Component Analysis</td><td>主成分分析，经典降维方法</td></tr><tr><td>UMAP</td><td>Uniform Manifold Approximation and Projection</td><td>统一流形逼近和投影</td></tr></table><p>原书在本流程中选择 UMAP，给出的理由是：它在处理<b>非线性关系和结构</b>方面比 PCA 表现更好。</p><div class="call good"><b>按原书记忆：</b>这里不是说 PCA 没用，也不是说 UMAP 在所有任务中都更好；只是本章的文本聚类流程选择 UMAP，书中解释是它更适合处理这里关注的非线性关系和结构。</div><p class="muted">补充理解：可以把降维想成把一张复杂地形图压缩成更简洁的地图。好的压缩希望保留对后续分组有用的结构，但压缩后不可能保留每一个细节。</p></section>
+<section><h2>04｜原书代码：使用 UMAP 将384维降到5维</h2><pre><code>from umap import UMAP
+
+# 将输入嵌入向量从384维降至5维
+umap_model = UMAP(
+    n_components=5,
+    min_dist=0.0,
+    metric="cosine",
+    random_state=42
+)
+
+reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre><p>代码的执行逻辑：</p><ol><li>导入 <code>UMAP</code> 类。</li><li>创建 UMAP 模型对象，并设置降维相关参数。</li><li>调用 <code>fit_transform(embeddings)</code>：根据原始嵌入向量拟合降维映射，并把所有文档向量转换到低维空间。</li><li>将结果保存到 <code>reduced_embeddings</code>。</li></ol><p>输入是 <code>embeddings</code>，输出是降维后的 <code>reduced_embeddings</code>。注意不是重新对原始摘要做一次 embedding。</p></section>
+<section><h2>05｜四个参数分别是什么意思？</h2><table><tr><th>参数</th><th>书中设置</th><th>含义</th></tr><tr><td><code>n_components</code></td><td><code>5</code></td><td>低维空间的维数；每篇文档从384个数值变成5个数值。书中说通常5到10维能较好捕捉全局结构。</td></tr><tr><td><code>min_dist</code></td><td><code>0.0</code></td><td>嵌入点之间的最小距离。设为0通常会产生更紧密的簇。</td></tr><tr><td><code>metric</code></td><td><code>"cosine"</code></td><td>用于衡量向量关系的距离度量。书中选择它，并指出基于欧氏距离的方法在处理高维数据时会遇到问题。</td></tr><tr><td><code>random_state</code></td><td><code>42</code></td><td>固定随机状态，使不同会话中的结果可重现；代价是禁用并行处理，训练速度会变慢。</td></tr></table><div class="call">特别注意：<code>random_state=42</code> 不是模型的维度，也不是类别数。它用于控制随机性、帮助复现实验结果。</div></section>
+<section><h2>06｜降维之后，矩阵会变成什么形状？</h2><p>输入矩阵是：</p><pre><code>embeddings.shape
+(44949, 384)</code></pre><p>我们设置 <code>n_components=5</code>，意味着每篇文档输出5个数值。文档数量不变，因此预期输出形状为：</p><pre><code>reduced_embeddings.shape
+(44949, 5)</code></pre><p>也就是说：</p><ul><li>44,949行仍然对应44,949篇论文摘要。</li><li>每一行从384个数值缩减为5个数值。</li><li>这5个数值是降维后的表示，不是5个关键词，也不是5个聚类类别。</li></ul><div class="call good"><b>与 Day 3 衔接：</b>Day 3 解决“如何把每篇文章表示成384维向量”；Day 4 解决“如何把这些384维向量压缩到5维，同时尽量保留有用结构”。下一步才使用压缩后的向量做聚类。</div></section>
+<section><h2>07｜今天的自测</h2>
+<details><summary>1. 为什么书中认为高维数据会增加聚类难度？</summary><p>维度增加时，每个维度可能的取值组合快速增长，搜索各维度子空间更加复杂，有意义的簇更难识别。</p></details>
+<details><summary>2. 降维是不是直接删除379列？</summary><p>不是。降维是通过算法寻找低维表示，不是随意删掉维度；它会损失一部分信息。</p></details>
+<details><summary>3. 为什么本书选择 UMAP 而不是 PCA？</summary><p>原书给出的理由是 UMAP 在处理非线性关系和结构方面比 PCA 表现更好。不要扩大成“UMAP 在任何任务上都更好”。</p></details>
+<details><summary>4. n_components=5 表示什么？</summary><p>指定降维后每篇文档用5个数值表示，即输出向量是5维。</p></details>
+<details><summary>5. random_state=42 有什么作用？</summary><p>使不同会话中的结果可重现，但会禁用并行处理，使训练变慢。</p></details></section>
+<section><h2>个人批注</h2><p class="muted">选中正文任意文字即可添加批注；批注保存在当前浏览器本地，可导出备份。</p><div class="toolbar"><button id="listBtn">查看批注</button><button id="exportBtn">导出 JSON</button></div><div id="notes"></div></section>
+<small>依据《图解大模型：生成式 AI 原理与实战》第117–118页（第5.2.2节）整理。参数说明与流程依据原书；辅助类比属于教学补充。</small>
+</div>
+<button id="annotate">＋ 添加批注</button><div id="editor"><b>添加批注</b><p id="quote"></p><textarea id="noteInput" placeholder="写下理解或疑问"></textarea><div><button id="saveBtn">保存</button><button id="cancelBtn">取消</button></div></div>
+<script>
+(()=>{
+const key='llm-study-day4-notes-v1',btn=document.getElementById('annotate'),ed=document.getElementById('editor'),notes=document.getElementById('notes');let pending=null;
+const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}};
+document.addEventListener('mouseup',e=>{if(e.target.closest('button,#editor,#notes'))return;const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){btn.style.display='none';return}const range=sel.getRangeAt(0);if(!document.querySelector('.wrap').contains(range.commonAncestorContainer))return;pending={quote:sel.toString(),time:new Date().toISOString()};btn.style.display='block'});
+btn.onclick=()=>{if(!pending)return;document.getElementById('quote').textContent='“'+pending.quote+'”';ed.style.display='block';btn.style.display='none'};
+document.getElementById('cancelBtn').onclick=()=>ed.style.display='none';
+document.getElementById('saveBtn').onclick=()=>{const note=document.getElementById('noteInput').value.trim();if(!note)return;const all=read();all.push({...pending,note});try{localStorage.setItem(key,JSON.stringify(all))}catch(e){alert('保存失败，请导出备份或检查浏览器存储权限');return}ed.style.display='none';document.getElementById('noteInput').value='';render()};
+function render(){notes.innerHTML='';for(const n of read()){const d=document.createElement('div');d.className='note';d.textContent='“'+n.quote+'”\n'+n.note;notes.appendChild(d)}}
+document.getElementById('listBtn').onclick=()=>{notes.style.display=notes.style.display==='block'?'none':'block';render()};
+document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(read(),null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='day4-annotations.json';a.click();URL.revokeObjectURL(u)};
+})();
+</script></body></html>
