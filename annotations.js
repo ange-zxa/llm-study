@@ -87,9 +87,9 @@ function notes(){return getStore().getAnnotations(day);}
 function refresh(){
  if(!supported()){
   if(!document.getElementById("study-highlight-warning")){
-   const msg=document.createElement("p");msg.id="study-highlight-warning";msg.style.cssText="padding:10px;color:#92400e;background:#fffbeb;border-radius:8px";
+   const msg=document.createElement("p");msg.id="study-highlight-warning";msg.style.cssText="position:fixed;left:12px;bottom:12px;z-index:9999;max-width:320px;padding:10px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px";
    msg.textContent="当前浏览器不支持无侵入式文字标记。请使用较新版本的 Chrome、Edge 或 Safari。";
-   root.insertBefore(msg,root.firstChild);
+   document.body.appendChild(msg);
   }
   return;
  }
