@@ -426,7 +426,7 @@ messages = [
 </main>
 </div>
 
-<div id="notesPanel" aria-hidden="true"><div class="notes-drawer" role="dialog" aria-modal="true" aria-label="批注列表"><div class="notes-head"><h2>本页批注</h2><button id="closeNotes" type="button" aria-label="关闭">×</button></div><div class="notes-body" id="notesBody"></div><div class="notes-tools"><button id="exportNotes" type="button">导出批注 JSON</button><button id="clearNotes" type="button">清空本页批注</button></div></div></div>
+<div id="notesPanel" aria-hidden="true"><div class="notes-drawer" role="dialog" aria-modal="true" aria-label="批注列表"><div class="notes-head"><h2>本页标记与批注</h2><button id="closeNotes" type="button" aria-label="关闭">×</button></div><div class="notes-body" id="notesBody"></div><div class="notes-tools"><button id="exportNotes" type="button">导出批注 JSON</button><button id="clearNotes" type="button">清空本页标记</button></div></div></div>
 <script>
 const frame=document.getElementById('noteFrame'), empty=document.getElementById('empty'), crumb=document.getElementById('crumb');
 const STORAGE_KEY='bigmodel-study-site-annotations-v1';let volatileStore={};
@@ -445,15 +445,16 @@ window.StudyNotes={
     const day=activeDay(),notes=this.getAnnotations(day),body=document.getElementById('notesBody');
     const count=document.getElementById('noteCount');if(count)count.textContent=notes.length;
     if(!body)return;
-    if(!notes.length){body.innerHTML='<div class="empty-notes">还没有批注。<br>在笔记正文中选中任意一段文字，点击出现的「＋ 添加批注」即可。</div>';return;}
+    if(!notes.length){body.innerHTML='<div class="empty-notes">还没有标记或批注。<br>选中正文后，可以选择「高亮」或「添加批注」。</div>';return;}
     body.innerHTML='';
     notes.slice().sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)).forEach(n=>{
+      const isHighlight=n.type==='highlight';
       const item=document.createElement('div');item.className='note-item';
-      const q=document.createElement('div');q.className='quote';q.textContent='“'+n.quote+'”';
-      const b=document.createElement('div');b.className='body';b.textContent=n.note;
-      const meta=document.createElement('div');meta.className='meta';meta.textContent=new Date(n.createdAt).toLocaleString();
+      const q=document.createElement('div');q.className='quote';q.textContent=(isHighlight?'高亮文本：':'批注原文：')+'“'+n.quote+'”';
+      const b=document.createElement('div');b.className='body';b.textContent=isHighlight?'纯颜色高亮，没有附加批注。':(n.note||'');
+      const meta=document.createElement('div');meta.className='meta';meta.textContent=(isHighlight?'高亮 · ':'批注 · ')+new Date(n.createdAt).toLocaleString();
       const actions=document.createElement('div');actions.className='actions';
-      const jump=document.createElement('button');jump.className='jump';jump.textContent='定位原文';jump.addEventListener('click',()=>{this.close();if(frame.contentWindow.focusAnnotation)frame.contentWindow.focusAnnotation(n.id)});
+      const jump=document.createElement('button');jump.className='jump';jump.textContent=isHighlight?'定位高亮':'定位批注';jump.addEventListener('click',()=>{this.close();if(frame.contentWindow.focusAnnotation)frame.contentWindow.focusAnnotation(n.id)});
       const del=document.createElement('button');del.textContent='删除';del.addEventListener('click',()=>{this.deleteAnnotation(day,n.id);if(frame.contentWindow.refreshAnnotations)frame.contentWindow.refreshAnnotations()});
       actions.append(jump,del);item.append(q,b,meta,actions);body.append(item);
     });
