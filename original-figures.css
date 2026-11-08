@@ -1,0 +1,9 @@
+.book-original-section{margin:24px 0;padding:18px;background:#f8fbff;border:1px solid #c9dbf4;border-radius:15px}
+.book-original-section h2{font-size:21px;margin:4px 0 10px}
+.book-original-section p{color:#52637c;margin:5px 0 12px}
+.book-original-section a{color:#2563eb}
+.textbook-original-figure{margin:16px 0;padding:12px;background:white;border:1px solid #e2e8f0;border-radius:12px}
+.textbook-original-figure img{display:block;width:100%;max-width:900px;height:auto;object-fit:contain;margin:auto}
+.textbook-original-figure figcaption{font-size:13px;line-height:1.8;color:#475569;margin-top:9px}
+.textbook-original-figure figcaption strong{color:#1d4ed8}
+.textbook-original-figure figcaption small{color:#64748b;font-size:12px}
