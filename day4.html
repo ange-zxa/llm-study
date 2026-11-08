@@ -53,8 +53,6 @@ reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre><p>代码�
 <details><summary>3. 为什么本书选择 UMAP 而不是 PCA？</summary><p>原书给出的理由是 UMAP 在处理非线性关系和结构方面比 PCA 表现更好。不要扩大成“UMAP 在任何任务上都更好”。</p></details>
 <details><summary>4. n_components=5 表示什么？</summary><p>指定降维后每篇文档用5个数值表示，即输出向量是5维。</p></details>
 <details><summary>5. random_state=42 有什么作用？</summary><p>使不同会话中的结果可重现，但会禁用并行处理，使训练变慢。</p></details></section>
-<section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
-<small>依据《图解大模型：生成式 AI 原理与实战》第117–118页（第5.2.2节）整理。参数说明与流程依据原书；辅助类比属于教学补充。</small>
 <section class="study-longread" id="expanded-day4"><div class="kicker">加深讲解 · 原书第117—118页</div><h2>一、为什么从384维降到5维？</h2>
 <figure><img src="figures/umap-reduction.svg" alt="UMAP对矩阵进行维度压缩但保留文档行数"><figcaption>教学重绘：每篇摘要的向量维数变小，文章数量不变。</figcaption></figure>
 <p>高维空间中的数据关系对于某些聚类算法比较难处理。书中先用文本嵌入捕捉语义，再使用UMAP寻找更低维的表示。这里的目标不是重新理解一次文章，也不是选取最重要的5个词，而是生成新的5维数值特征，让后续聚类更方便。</p>
@@ -79,6 +77,9 @@ reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre>
 <p>这不仅是矩阵数学题，还是对整个数据流水线的检查：如果文章数量意外改变，可能是中途过滤或预处理发生了变化；如果降维后的列数不是5，就需要检查参数及运行结果。</p>
 <details><summary>自测：5维向量有5个主题吗？</summary><p>没有。5是表示的维度，不是簇的数量或主题数。主题数需要后续聚类模型来发现。</p></details>
 </section>
+<section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
+<small>依据《图解大模型：生成式 AI 原理与实战》第117–118页（第5.2.2节）整理。参数说明与流程依据原书；辅助类比属于教学补充。</small>
+
 </div>
 
 
