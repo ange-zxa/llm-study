@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img"><defs><style>.t{font:16px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#182b49}.small{font:13px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#52657e}.hd{font:bold 20px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#182b49}.box{stroke:#cbd5e1;stroke-width:1.5;rx:12}.line{stroke:#94a3b8;stroke-width:2.6;fill:none;marker-end:url(#arr)}</style><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L8 3L0 6" fill="none" stroke="#94a3b8" stroke-width="1.5"/></marker></defs><rect width="960" height="360" fill="#fbfdff"/>
+<text class="hd" x="25" y="39">从「一篇文档的词频」到「一个簇的词频」</text>
+<rect class="box" x="30" y="69" width="375" height="230" fill="#f8fafc"/><text class="t" x="48" y="105" font-weight="bold">同一簇内的三篇摘要</text>
+<rect x="50" y="122" width="330" height="37" rx="7" fill="#dbeafe"/><text class="t" x="66" y="146">A：手语　翻译　模型</text>
+<rect x="50" y="169" width="330" height="37" rx="7" fill="#dbeafe"/><text class="t" x="66" y="193">B：手语　识别　手势</text>
+<rect x="50" y="216" width="330" height="37" rx="7" fill="#dbeafe"/><text class="t" x="66" y="240">C：手语　翻译　手势</text>
+<path class="line" d="M417 181H511"/><text class="small" x="427" y="166">合并并统计</text>
+<rect class="box" x="521" y="69" width="402" height="230" fill="#f0fdf4"/><text class="t" x="542" y="105" font-weight="bold">簇级词袋：c-TF</text>
+<g font-size="16" fill="#1f2937" font-family="'PingFang SC','Microsoft YaHei',Arial"><text x="555" y="145">手语</text><text x="555" y="183">翻译</text><text x="555" y="221">手势</text><text x="555" y="259">识别</text></g>
+<rect x="630" y="123" rx="5" width="210" height="23" fill="#86efac"/><text class="t" x="855" y="141">3</text>
+<rect x="630" y="161" rx="5" width="140" height="23" fill="#a7f3d0"/><text class="t" x="785" y="179">2</text>
+<rect x="630" y="199" rx="5" width="140" height="23" fill="#a7f3d0"/><text class="t" x="785" y="217">2</text>
+<rect x="630" y="237" rx="5" width="70" height="23" fill="#bbf7d0"/><text class="t" x="715" y="255">1</text>
+<text class="small" x="26" y="335">数值是便于理解的教学示例，不是原书实际语料的词频。</text></svg>
