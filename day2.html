@@ -25,6 +25,7 @@
 #annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
 </style><link rel="stylesheet" href="annotations.css">
+<link rel="stylesheet" href="lesson-expanded.css">
 </head>
 <body data-study-day="2"><div class="wrap">
 <header><div class="pill">DAY 2 · 每日学习</div><h1>从 ChatGPT 的消息结构到文本聚类</h1><p>《图解大模型：生成式 AI 原理与实战》 · 第111–116页</p><small>本日包含上次问答补充、第4章小结，以及第5章开篇内容。</small></header>
@@ -60,7 +61,28 @@ messages = [
 <details><summary>分类与聚类最关键的区别是什么？</summary><p>分类通常根据已定义的目标类别分配标签，而无监督聚类尝试从无人工类别标签的文本中发现相似组别。</p></details>
 <details><summary>第5.2节通用聚类流程包含哪三个步骤？</summary><p>嵌入文档、对嵌入向量降维、对降维后的向量聚类。</p></details></section>
 <section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
-<small>原书依据：第111–116页；中文代码示例及解释是教学补充，不属于逐字原文。</small></div>
+<small>原书依据：第111–116页；中文代码示例及解释是教学补充，不属于逐字原文。</small><section class="study-longread" id="expanded-day2"><div class="kicker">加深讲解 · 原书4.6.2～4.7与第5章导读</div><h2>一、代码里的prompt和messages，不是同一种东西</h2>
+<figure><img src="figures/api-message-flow.svg" alt="提示词字符串与消息列表之间的关系"><figcaption>教学重绘：字符串模板经过替换形成user消息，再和system一起组成messages。</figcaption></figure>
+<p>一个字符串变量与一个消息列表属于不同的数据结构。假设 <code>prompt="判断：[DOCUMENT]"</code>，<code>document="电影很精彩"</code>，先用 <code>replace</code> 得到完整的文本指令；再把它放入 <code>{"role":"user","content":...}</code>。这样才能和其他消息一起传入 <code>client.chat.completions.create()</code>。</p>
+<h3>system一定要写成“你是一个助手”吗？</h3><p>不需要。书中只是给了一个简单例子。system通常用来提出跨任务的要求；user放入当前要处理的具体文本。这里的角色不是模型架构中的Encoder或Decoder，而是API输入数据的一部分。</p>
+<div class="explain"><b>运行前后的区别：</b>定义 <code>prompt</code>、<code>document</code>、<code>messages</code> 都只是在Python内存中创建数据；调用API时才会向服务器发送请求。客户端返回的 <code>choices[0].message.content</code> 通常是字符串，接下来才能转换成数字标签。</div>
+<h2>二、第四章和第五章的任务为什么不同？</h2>
+<figure><img src="figures/classification-vs-clustering.svg" alt="文本分类和文本聚类的任务区别"><figcaption>图解：分类预先定义标签；聚类主要从文档关系中发现组别。</figcaption></figure>
+<p>第4章电影影评已经规定了“正面”和“负面”两种类别，所以任务是把新影评分到已定义类别中。第5章的论文摘要没有预先为每一篇给出所属研究主题，而是利用文本嵌入将语义相近的摘要组织成若干组。</p>
+<p><b>注意：</b>聚类产生的簇编号不是自然语言主题名。后面BERTopic会利用关键词进一步说明每个簇的含义。</p>
+<h2>三、第4章分类方法回顾</h2>
+<table><thead><tr><th>路线</th><th>输入给模型的是什么</th><th>如何得到结果</th></tr></thead><tbody>
+<tr><td>特定任务分类模型</td><td>评论文本</td><td>模型分类头产生类别分数</td></tr>
+<tr><td>嵌入模型 + 分类器</td><td>先将评论编码成向量</td><td>使用外部分类器预测标签</td></tr>
+<tr><td>嵌入模型零样本分类</td><td>评论向量 + 标签描述向量</td><td>利用语义相似性匹配标签</td></tr>
+<tr><td>FLAN-T5 / GPT类生成模型</td><td>任务指令 + 评论</td><td>通过生成词语或数字形式的答案进行分类</td></tr>
+</tbody></table>
+<div class="warn"><b>模型推理≠微调：</b>你用prompt指示GPT将评论分成0或1，并不意味着这一次调用更新了GPT的参数。提示词控制当前推理任务；训练需要另外的训练数据和优化过程。</div>
+<h2>四、为什么要按照原书接着学习文本聚类？</h2><p>分类要求事先知道类别，这不总是现实。你拿到几万篇论文时，可能无法预先列出它们属于哪些研究方向。聚类的价值是在没有逐条人工类别标签的情况下发现结构；但聚类仍然需要依赖合理的向量表示、降维参数和算法选择。</p>
+<details><summary>自测：为什么messages中的user可以保存一个完整prompt？</summary><p>因为prompt变量在这段代码中只是字符串，而user消息中的content本来就是存放文本内容的位置。先把document填入prompt，再放进content即可。</p></details>
+<details><summary>自测：聚类得到“簇3”意味着主题叫“簇3”吗？</summary><p>不意味着。簇编号只是算法给分组的标识，还需要检查文档内容，或进一步用主题建模输出关键词。</p></details>
+</section>
+</div>
 
 
 <script src="annotations.js"></script>
