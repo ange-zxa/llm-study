@@ -94,6 +94,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
 &lt;/style&gt;
 &lt;link rel=&quot;stylesheet&quot; href=&quot;annotations.css&quot;&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;lesson-expanded.css&quot;&gt;
 &lt;/head&gt;
 &lt;body data-study-day=&quot;1&quot;&gt;
 &lt;div class=&quot;wrap&quot;&gt;
@@ -267,7 +268,63 @@ messages = [
 &lt;div class=&quot;callout good&quot;&gt;&lt;b&gt;易错点：&lt;/b&gt;日常语言中 prompt 可以泛指全部提示，但这段 Python 代码里它只是一个名叫 prompt 的变量，不能和 messages 列表画等号。&lt;/div&gt;
 &lt;p class=&quot;small&quot;&gt;对照原书第111页；上述中文实例为教学补充。&lt;/p&gt;
 &lt;/section&gt;
-&lt;/main&gt;
+&lt;section class=&quot;card study-longread&quot; id=&quot;expanded-day1&quot;&gt;&lt;div class=&quot;kicker&quot;&gt;完整自学讲义 · 原书第110—113页&lt;/div&gt;
+&lt;h2&gt;一、先理解：为什么使用 API 而不是本地运行 GPT？&lt;/h2&gt;
+&lt;p&gt;书中第4.6.2节要用 ChatGPT 类生成模型完成电影评论的情感分类。它没有要求我们下载 GPT-3.5 的全部模型权重到电脑里，而是通过API请求远程服务。这意味着本地Python程序负责整理请求、发送消息、解析响应，而模型的前向推理由服务端完成。&lt;/p&gt;
+&lt;div class=&quot;explain&quot;&gt;&lt;b&gt;最重要的区别：&lt;/b&gt;“发请求让模型预测”属于推理阶段；不是训练阶段，也不会因为你向API发送一句影评，就自动针对这条评论微调模型参数。&lt;/div&gt;
+&lt;h2&gt;二、把 prompt、document、messages、客户端串成一条完整流程&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&quot;figures/api-message-flow.svg&quot; alt=&quot;prompt模板和document先生成user消息，再组成messages列表发送给API&quot;&gt;&lt;figcaption&gt;依照第4.6.2节的Python代码绘制：从字符串到消息列表再到API请求。&lt;/figcaption&gt;&lt;/figure&gt;
+&lt;p&gt;这是最需要弄清楚的层次：&lt;code&gt;prompt&lt;/code&gt; 是一个字符串模板；&lt;code&gt;document&lt;/code&gt; 是当前要判断的文本；&lt;code&gt;prompt.replace(&quot;[DOCUMENT]&quot;, document)&lt;/code&gt; 产生完整任务说明；然后这个字符串成为一条 &lt;code&gt;user&lt;/code&gt; 消息的 &lt;code&gt;content&lt;/code&gt;。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;prompt = &quot;&quot;&quot;判断下面的影评：
+[DOCUMENT]
+正面回复1，负面回复0，不要输出别的内容。&quot;&quot;&quot;
+document = &quot;演员表现非常出色，剧情很精彩。&quot;
+
+task = prompt.replace(&quot;[DOCUMENT]&quot;, document)
+
+messages = [
+    {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a helpful assistant.&quot;},
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: task}
+]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这样写可以重复使用同一个 &lt;code&gt;prompt&lt;/code&gt;，每次只改变 &lt;code&gt;document&lt;/code&gt;。这里的中文示例用于帮助理解；书中采用英文任务模板。&lt;/p&gt;
+&lt;h2&gt;三、role=system 与 role=user 到底影响什么？&lt;/h2&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;字段&lt;/th&gt;&lt;th&gt;书中对应&lt;/th&gt;&lt;th&gt;含义&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;role=&quot;system&quot;&lt;/code&gt;&lt;/td&gt;&lt;td&gt;&lt;code&gt;You are a helpful assistant.&lt;/code&gt;&lt;/td&gt;&lt;td&gt;给模型设定整体行为；本例内容较简单&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;role=&quot;user&quot;&lt;/code&gt;&lt;/td&gt;&lt;td&gt;填好文本的分类指令&lt;/td&gt;&lt;td&gt;这次具体要判断哪条评论、按什么格式输出&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;content&lt;/code&gt;&lt;/td&gt;&lt;td&gt;消息中的字符串&lt;/td&gt;&lt;td&gt;一条消息真正携带的文本&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;messages&lt;/code&gt;&lt;/td&gt;&lt;td&gt;包含两条字典的列表&lt;/td&gt;&lt;td&gt;聊天API的一次结构化输入&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;p&gt;你可以把 &lt;code&gt;messages&lt;/code&gt; 想成一个信封，里面有多张写着来源和内容的便签。system和user不是两个独立的神经网络，而是同一个模型接收到的不同角色信息。&lt;/p&gt;
+&lt;h2&gt;四、代码里温度设置为0，有什么意义？&lt;/h2&gt;
+&lt;p&gt;书中设置 &lt;code&gt;temperature=0&lt;/code&gt;，因为分类任务需要尽量稳定的输出，而不是创意写作中那种多样化措辞。较低温度通常使模型更倾向于选择概率更高的输出。不过这不是“保证每次一模一样”的数学承诺，更不等于模型不再需要上下文。&lt;/p&gt;
+&lt;h2&gt;五、解析API返回值时，为什么要取 choices[0]？&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;chat_completion = client.chat.completions.create(
+    messages=messages, model=model, temperature=0
+)
+
+answer = chat_completion.choices[0].message.content&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;chat_completion&lt;/code&gt; 是一整个响应对象；&lt;code&gt;choices&lt;/code&gt; 是候选回复集合；&lt;code&gt;[0]&lt;/code&gt; 取第一个候选；&lt;code&gt;message.content&lt;/code&gt; 才是需要提取的文字。对于分类任务，理想情况是只得到字符串 &lt;code&gt;&quot;1&quot;&lt;/code&gt; 或 &lt;code&gt;&quot;0&quot;&lt;/code&gt;。&lt;/p&gt;
+&lt;div class=&quot;warn&quot;&gt;&lt;b&gt;容易忽略：&lt;/b&gt;“输出限制为0或1”是提示词中的要求，而不是Python自动保证的类型约束。如果模型意外输出“正面1”，直接执行 &lt;code&gt;int(pred)&lt;/code&gt; 会报错。实际工程还可以增加格式校验、重试或结构化输出；这些是书中示例之外的稳健性补充。&lt;/div&gt;
+&lt;h2&gt;六、批量处理：一条评论调用一次模型&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;predictions = [
+    chatgpt_generation(prompt, doc)
+    for doc in tqdm(data[&quot;test&quot;][&quot;text&quot;])
+]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这是一种列表推导式。假设测试集有3条评论，过程相当于分别执行三次 &lt;code&gt;chatgpt_generation(prompt, doc)&lt;/code&gt;，把3个返回值组成列表。原书实验测试集包含1066条评论，因此大量请求可能遇到API成本和速率限制；第111—112页也介绍了指数退避重试思路。&lt;/p&gt;
+&lt;h2&gt;七、为什么最终要评价 Precision、Recall、F1？&lt;/h2&gt;
+&lt;p&gt;完成预测后，模型得到的标签与测试集的真实标签比较。Precision表示“被预测为某类的样本中，真正属于该类的比例”；Recall表示“真正属于该类的样本中，被模型找到的比例”；F1是二者的调和平均数。&lt;/p&gt;
+&lt;div class=&quot;formula&quot;&gt;Precision = TP / (TP + FP)
+Recall    = TP / (TP + FN)
+F1        = 2 × Precision × Recall / (Precision + Recall)&lt;/div&gt;
+&lt;p&gt;其中TP/FP/FN需要针对某个指定类别解释。例如把“正面评论”视为正类时：TP是真正的正面被预测为正面，FP是负面被错判为正面，FN是正面被错判为负面。&lt;/p&gt;
+&lt;p&gt;原书实验报告 F1 约为0.91，但书中提醒：对于闭源模型，我们不知道其训练数据是否包含测试数据，因此不能完全排除数据污染问题。&lt;b&gt;这一提醒不是说实验结果无效，而是解释为什么评价闭源模型需要特别注意数据集独立性。&lt;/b&gt;&lt;/p&gt;
+&lt;h2&gt;八、把这一节连起来&lt;/h2&gt;
+&lt;div class=&quot;formula&quot;&gt;影评文本 → 加入提示词模板 → 组织messages → 发送API
+   → 生成 &quot;0&quot;/&quot;1&quot; → 转换标签 → 对照真实标签 → 评价F1&lt;/div&gt;
+&lt;details&gt;&lt;summary&gt;自测：只定义 messages，模型会开始预测吗？&lt;/summary&gt;&lt;p&gt;不会。它只是内存中的Python列表，直到调用相应API方法才会发送到模型服务端。&lt;/p&gt;&lt;/details&gt;
+&lt;details&gt;&lt;summary&gt;自测：temperature=0 后，就一定完全没有随机性吗？&lt;/summary&gt;&lt;p&gt;不是绝对保证。它通常使生成更确定，但结果仍可能受到服务端模型版本、推理执行等因素影响。&lt;/p&gt;&lt;/details&gt;
+&lt;details&gt;&lt;summary&gt;自测：为什么F1=0.91还需要提及数据污染？&lt;/summary&gt;&lt;p&gt;因为未知的训练数据可能与测试集有重叠，导致测试结果高估实际泛化能力。尤其闭源模型较难核实训练集构成。&lt;/p&gt;&lt;/details&gt;
+&lt;/section&gt;&lt;/main&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 
