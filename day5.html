@@ -135,8 +135,6 @@ plt.axis("off")</code></pre>
 <details><summary>3. <code>min_cluster_size=50</code> 是什么意思？</summary><p>设定算法的最小簇规模参数为50。书中指出减小它通常可得到更多簇。</p></details>
 <details><summary>4. 为什么绘图前要从384维再降到2维？</summary><p>这是为了把文档显示在x-y二维平面上；此前5维降维用于聚类。两次降维目的不同。</p></details>
 <details><summary>5. 为什么颜色相同不能证明属于同一簇？</summary><p>原书示例中簇数多、调色板颜色有限，因此绘图库会循环使用颜色。</p></details></section>
-<section><h2>本页批注</h2><p class="muted">选中原文后，左键选择「高亮」或「添加批注」。高亮只显示背景色，批注显示下划线，点击对应位置即可查看批注；不会改变正文HTML结构。</p></section>
-<small>内容依据用户提供的《图解大模型》中文版本第119–122页。对不同标签计数和前三条样本并非随机的辨析为代码层面的补充说明。</small>
 <section class="study-longread" id="expanded-day5"><div class="kicker">加深讲解 · 原书第119—122页</div><h2>一、看图理解 HDBSCAN 为什么能识别离群点</h2>
 <figure><img src="figures/hdbscan-outliers.svg" alt="Kmeans与HDBSCAN对离群点的不同处理"><figcaption>对应原书图5-7的概念重绘：K-means通常把点分配给某个簇；HDBSCAN允许将稀疏点标记为离群点。</figcaption></figure>
 <p>K-means是基于质心的算法，需要事先给出想要的簇数量。假设指定 k=3，那么普通K-means会把每个点分配给这三个簇之一。HDBSCAN从局部密度结构出发，不需要你先指定具体的簇数，也能把不容易归组的点设为 <code>-1</code>。</p>
@@ -160,6 +158,9 @@ n_clusters = len(valid_labels)</code></pre>
 <h2>六、铺垫Day6：聚类后为什么还需要BERTopic？</h2><p>这一节最终只能告诉我们“论文A和论文B属于簇0”，无法自动回答“簇0最重要的研究主题是什么”。Day6会使用词袋统计和c-TF-IDF，将这些簇转换成可读的主题关键词。</p>
 <details><summary>自测：如果簇0里都是手语翻译论文，算法为什么不会自动把簇0改名为“手语”？</summary><p>HDBSCAN主要操作数值向量和簇标签，它不会自动从原始文本中生成可解释的主题描述。主题表示需要另外一套关键词提取或生成机制。</p></details>
 </section>
+<section><h2>本页批注</h2><p class="muted">选中原文后，左键选择「高亮」或「添加批注」。高亮只显示背景色，批注显示下划线，点击对应位置即可查看批注；不会改变正文HTML结构。</p></section>
+<small>内容依据用户提供的《图解大模型》中文版本第119–122页。对不同标签计数和前三条样本并非随机的辨析为代码层面的补充说明。</small>
+
 </div>
 <script src="annotations.js"></script>
 </body></html>
