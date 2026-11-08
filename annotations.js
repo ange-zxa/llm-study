@@ -13,7 +13,7 @@ editor.className="study-note-dialog";
 editor.innerHTML='<h3>添加批注</h3><div class="study-quote"></div><textarea placeholder="写下你的理解、疑问或补充"></textarea><div class="study-note-status" role="status"></div><div class="study-note-actions"><button type="button" class="cancel">取消</button><button type="button" class="primary save">保存批注</button></div>';
 const popover=document.createElement("div");
 popover.className="study-note-popover";
-popover.innerHTML='<button class="study-close" type="button" aria-label="关闭">×</button><h3>批注</h3><div class="study-quote"></div><div class="study-text"></div>';
+popover.innerHTML='<button class="study-close" type="button" aria-label="关闭">×</button><h3 class="study-popover-title">批注</h3><div class="study-quote"></div><div class="study-text"></div><div class="study-note-status" role="status"></div><div class="study-note-actions"><button type="button" class="study-delete-mark">删除此标记</button></div>';
 document.body.append(menu,editor,popover);
 let selected=null;
 let visible=[];
@@ -32,6 +32,11 @@ function getStore(){
     const data=JSON.parse(localStorage.getItem(key)||"{}");data[d]=data[d]||[];
     rec.id="note-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
     data[d].push(rec);localStorage.setItem(key,JSON.stringify(data));return rec;
+   },
+   deleteAnnotation(d,id){
+    const data=JSON.parse(localStorage.getItem(key)||"{}");
+    data[d]=(data[d]||[]).filter(x=>x.id!==id);
+    localStorage.setItem(key,JSON.stringify(data));
    },
    refreshCount(){}
   };
@@ -162,18 +167,36 @@ editor.querySelector(".save").addEventListener("click",()=>{
  try{save("annotation",text);editor.style.display="none";}
  catch(e){noteStatus.textContent="保存失败："+(e.message||String(e));}
 });
-popover.querySelector(".study-close").addEventListener("click",()=>{popover.style.display="none";});
+let openedRecordId=null;
+popover.querySelector(".study-close").addEventListener("click",()=>{popover.style.display="none";openedRecordId=null;});
 function showNote(rec){
- if(rec.type==="highlight")return;
+ openedRecordId=rec.id;
+ const isHighlight=rec.type==="highlight";
+ popover.querySelector(".study-popover-title").textContent=isHighlight?"黄色高亮":"文字批注";
  popover.querySelector(".study-quote").textContent="“"+rec.quote+"”";
- popover.querySelector(".study-text").textContent=rec.note||"";
+ const body=popover.querySelector(".study-text");
+ body.textContent=isHighlight?"此处仅添加了颜色高亮。":(rec.note||"");
+ popover.querySelector(".study-note-status").textContent="";
  popover.style.display="block";
 }
+popover.querySelector(".study-delete-mark").addEventListener("click",()=>{
+ if(!openedRecordId)return;
+ const status=popover.querySelector(".study-note-status");
+ try{
+  const current=getStore().getAnnotation(day,openedRecordId);
+  if(!current){popover.style.display="none";openedRecordId=null;refresh();return;}
+  getStore().deleteAnnotation(day,openedRecordId);
+  refresh();
+  getStore().refreshCount();
+  popover.style.display="none";
+  openedRecordId=null;
+ }catch(e){status.textContent="删除失败："+(e.message||String(e));}
+});
 function hitRect(rect,x,y){return x>=rect.left-1&&x<=rect.right+1&&y>=rect.top-2&&y<=rect.bottom+2;}
 root.addEventListener("click",e=>{
  if(window.getSelection()&&!window.getSelection().isCollapsed)return;
- // Decoration is not part of the DOM, so locate the annotated text using Range rectangles.
- const hit=visible.filter(v=>v.kind==="annotation").find(v=>
+ // CSS highlights do not create DOM elements; use saved Range rectangles for clicks.
+ const hit=visible.find(v=>
   Array.from(v.range.getClientRects()).some(rect=>hitRect(rect,e.clientX,e.clientY))
  );
  if(hit)showNote(hit.rec);
@@ -183,7 +206,7 @@ window.focusAnnotation=function(id){
  if(!v)return;
  const node=v.range.startContainer.nodeType===Node.TEXT_NODE?v.range.startContainer.parentElement:v.range.startContainer;
  if(node&&node.scrollIntoView)node.scrollIntoView({behavior:"smooth",block:"center"});
- if(v.kind==="annotation")showNote(v.rec);
+ showNote(v.rec);
 };
 window.refreshAnnotations=refresh;
 function migrateLegacy(){
