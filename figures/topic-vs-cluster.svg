@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="335" viewBox="0 0 900 335" role="img"><defs><style>.t{font:16px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#182b49}.small{font:13px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#52657e}.hd{font:bold 20px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#182b49}.box{stroke:#cbd5e1;stroke-width:1.5;rx:12}.line{stroke:#94a3b8;stroke-width:2.6;fill:none;marker-end:url(#arr)}</style><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L8 3L0 6" fill="none" stroke="#94a3b8" stroke-width="1.5"/></marker></defs><rect width="900" height="335" fill="#fbfdff"/>
+<text class="hd" x="28" y="38">从文档簇到可解释的主题</text>
+<rect class="box" x="35" y="68" width="365" height="222" fill="#eff6ff"/><text class="t" x="55" y="103" font-weight="bold">HDBSCAN 输出：簇 0</text>
+<rect x="56" y="122" width="322" height="35" rx="8" fill="white"/><text class="t" x="70" y="145">论文 A：手语机器翻译</text>
+<rect x="56" y="166" width="322" height="35" rx="8" fill="white"/><text class="t" x="70" y="189">论文 B：手势与语言识别</text>
+<rect x="56" y="210" width="322" height="35" rx="8" fill="white"/><text class="t" x="70" y="233">论文 C：手语语义分析</text>
+<path class="line" d="M408 177H488"/><text class="small" x="417" y="163">提取表示</text>
+<rect class="box" x="504" y="68" width="355" height="222" fill="#ecfdf5"/><text class="t" x="526" y="103" font-weight="bold">主题关键词（按权重排序）</text>
+<rect x="526" y="126" width="100" height="44" rx="12" fill="#bbf7d0"/><text class="t" x="560" y="154">手语</text>
+<rect x="640" y="126" width="100" height="44" rx="12" fill="#bbf7d0"/><text class="t" x="673" y="154">翻译</text>
+<rect x="526" y="180" width="100" height="44" rx="12" fill="#d1fae5"/><text class="t" x="560" y="208">语言</text>
+<rect x="640" y="180" width="100" height="44" rx="12" fill="#d1fae5"/><text class="t" x="673" y="208">手势</text>
+<text class="small" x="525" y="268">能解释这一簇在谈论什么</text>
+<text class="small" x="36" y="317">注：三篇论文和词语组合为教学示例，不是原书实际聚类数据。</text></svg>
