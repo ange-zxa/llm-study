@@ -350,7 +350,7 @@ window.StudyNotes={
   getAnnotations(day){return (readStore()[day]||[]).slice()},
   getAnnotation(day,id){return this.getAnnotations(day).find(n=>n.id===id)},
   saveAnnotation(day,note){const data=readStore();data[day]=data[day]||[];note.id='note-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);data[day].push(note);if(!writeStore(data))throw new Error('浏览器未允许保存本地数据，请检查网站的存储权限或退出无痕模式后重试。');this.render();return note},
-  deleteAnnotation(day,id){const data=readStore();data[day]=(data[day]||[]).filter(n=>n.id!==id);writeStore(data);this.render();},
+  deleteAnnotation(day,id){const data=readStore();data[day]=(data[day]||[]).filter(n=>n.id!==id);if(!writeStore(data))throw new Error('删除未能写入浏览器本地存储，请检查存储权限。');this.render();},
   refreshCount(){const n=this.getAnnotations(activeDay()).length;const count=document.getElementById('noteCount');if(count)count.textContent=n;},
   open(){document.getElementById('notesPanel').classList.add('open');document.getElementById('notesPanel').setAttribute('aria-hidden','false');this.render();},
   close(){document.getElementById('notesPanel').classList.remove('open');document.getElementById('notesPanel').setAttribute('aria-hidden','true');},
