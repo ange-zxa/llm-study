@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 305" width="940" height="305" role="img"><defs><style>.t{font:16px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#172033}.s{font:13px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#667085}.h{font:bold 20px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#172033}.a{stroke:#94a3b8;stroke-width:2.3;fill:none;marker-end:url(#arrow)}</style><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L8 3L0 6" fill="#94a3b8"/></marker></defs><rect width="940" height="305" fill="#fbfdff"/>
+<text class="h" x="25" y="36">已知类别的分类 vs 自动发现分组的聚类</text>
+<rect x="25" y="65" rx="16" width="420" height="214" fill="#eff6ff" stroke="#bfdbfe"/>
+<text class="t" x="44" y="97" font-weight="bold">文本分类（第4章）</text><text class="s" x="44" y="130">先规定：正面 / 负面</text>
+<rect x="45" y="152" rx="8" width="166" height="50" fill="#bfdbfe"/><text class="t" x="75" y="182">非常精彩 → 1</text>
+<rect x="225" y="152" rx="8" width="198" height="50" fill="#fecaca"/><text class="t" x="241" y="182">剧情很差 → 0</text>
+<text class="s" x="45" y="241">输出标签所属的已定义类别</text>
+<rect x="490" y="65" rx="16" width="425" height="214" fill="#f0fdf4" stroke="#bbf7d0"/>
+<text class="t" x="510" y="97" font-weight="bold">文本聚类（第5章）</text><text class="s" x="510" y="130">不提供每篇论文的类别标签</text>
+<rect x="510" y="152" rx="8" width="174" height="50" fill="#bbf7d0"/><text class="t" x="537" y="182">猫、狗、宠物</text>
+<rect x="700" y="152" rx="8" width="195" height="50" fill="#fde68a"/><text class="t" x="723" y="182">足球、篮球</text>
+<text class="s" x="510" y="241">根据向量关系发现相似文本组</text></svg>
