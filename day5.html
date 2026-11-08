@@ -24,6 +24,7 @@
 #annotationBubble .quote{font-size:12px;color:#64748b;background:#f8fafc;padding:8px;border-radius:8px;margin:8px 0;max-height:72px;overflow:auto}
 #annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
+.cluster-comparison{margin:18px 0}.cluster-comparison img{display:block;width:100%;max-width:758px;height:auto;margin:0 auto}.cluster-comparison figcaption{margin-top:6px;color:#64748b;font-size:14px;text-align:center}
 </style><link rel="stylesheet" href="annotations.css">
 </head>
 <body data-study-day="5"><div class="wrap">
@@ -36,7 +37,18 @@
 <tr><td>聚类依据</td><td>点与质心的距离</td><td>空间中的密度结构</td></tr>
 <tr><td>预设簇数量</td><td>通常需要指定 k</td><td>不需要指定最终簇数量</td></tr>
 <tr><td>离群点</td><td>普通 K-means 仍会分配给某一簇</td><td>允许不归属于任何簇</td></tr></tbody></table>
-<p>图5-7中的关键区别，是是否允许某个点作为<b>离群点（outlier）</b>保留下来，而不是被强行归类。</p></section>
+<p>图5-7中的关键区别，是是否允许某个点作为<b>离群点（outlier）</b>保留下来，而不是被强行归类。</p>
+<figure class="cluster-comparison" id="figure-5-7">
+  <img src="assets/figure-5-7.png" width="758" height="431" alt="左图按质心划分空间，两个孤立点都有簇归属；右图按密度圈出三个点团，两个孤立点留在圈外。">
+  <figcaption>图 5-7 · 基于质心与基于密度的聚类。原书第 119 页。</figcaption>
+</figure>
+<h3>怎么读图 5-7？</h3>
+<p>两幅图画的是<b>同一批点</b>，每个圆点可以看成一篇论文。图对比的是两类聚类规则，本节用 <b>K-means</b> 和 <b>HDBSCAN</b> 分别作为例子。</p>
+<ul>
+  <li><b>左图：基于质心。</b> 如果用 K-means 并设 <code>k=3</code>，算法会找出三个质心，每个点归给最近的质心。背景的三种颜色表示三个质心各自负责的区域。上方和右下角的两个孤立点也落在某个颜色区域里，因此都有归属。</li>
+  <li><b>右图：基于密度。</b> 颜色圈出的是点扎堆形成的簇。看同样两个孤立点：它们周围的点不够密集，图中把它们留在簇外。在本节 HDBSCAN 的输出里，这类未分配到簇的点用 <code>-1</code> 表示。</li>
+</ul>
+<p>图里左右都画了三组。以本节的算法为例，左边的组数由 <code>k</code> 预先指定，右边的组数由点的密度结构和聚类参数共同决定。</p></section>
 <section><h2>03｜用一个直观例子理解密度聚类</h2><p>假设我们把论文向量画在平面上：一堆论文讨论机器翻译，一堆讨论语音识别，还有少量论文研究非常小众的问题。</p>
 <p>如果某些向量在局部空间形成<b>足够密集的群体</b>，HDBSCAN 就可以把它们组织为一个簇；而那些没有稳定形成密集群体的点，可能标记为 <code>-1</code>。</p>
 <div class="call good"><b>注意：</b><code>-1</code> 并不等于“错误论文”，只表示聚类算法没有把它可靠地归入某个簇。在学术数据中，小众研究领域可能恰恰是有价值的信息。</div></section>
