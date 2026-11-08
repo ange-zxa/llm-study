@@ -26,6 +26,7 @@
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
 .cluster-comparison{margin:18px 0}.cluster-comparison img{display:block;width:100%;max-width:758px;height:auto;margin:0 auto}.cluster-comparison figcaption{margin-top:6px;color:#64748b;font-size:14px;text-align:center}
 </style><link rel="stylesheet" href="annotations.css">
+<link rel="stylesheet" href="lesson-expanded.css">
 </head><body data-study-day="6"><div class="wrap">
 <header><span class="pill">DAY 6 · 第五章</span><h1>从文本聚类到主题建模：BERTopic</h1><p>《图解大模型》 · 5.3—5.3.1</p><small>原书第122—128页，图5-9至图5-17</small></header>
 <section><h2>01｜为什么聚类后还要主题建模？</h2><p>Day 5 的 HDBSCAN 为相似的论文生成簇0、簇1等标签，但数字无法解释每组文档具体讨论什么。原书在第122页以手语翻译相关文档为例：我们不仅希望找到一组类似的论文，还希望用“手势”“语言”“翻译”等关键词描述该组的主题。</p><div class="call"><b>区别：</b>聚类解决“哪些文档应该分在一起”，主题建模进一步解决“这组文档在讨论什么”。主题表示可以是关键词或短语，不必只有一个名称。</div></section>
@@ -76,6 +77,76 @@ topic_model.get_topic_info()</code></pre>
 <details><summary>2. 为什么主题表示不能只用出现次数最多的词？</summary><p>一些词在所有主题中都非常常见，缺乏区分度。c-TF-IDF会考虑词在全体簇中的频次。</p></details>
 <details><summary>3. BERTopic流程分哪两个部分？</summary><p>第一部分嵌入、降维、聚类；第二部分CountVectorizer词频统计和c-TF-IDF加权。</p></details>
 <details><summary>4. get_topic(0) 返回的数字是预测概率吗？</summary><p>不是，是词在对应主题中的表示权重。</p></details></section>
+<section class="study-longread" id="complete-day6">
+<div class="kicker">完整自学讲义 · 补充版</div><h2>先告诉你怎么学这一节</h2>
+<p>这一节只需要抓住一条主线：<b>以前我们能把论文分成组，现在要让每组有一个人能理解的“主题说明”。</b>建议先看图、再读例子，最后把同样的关系对应到书中代码和输出。下面不仅解释结论，也解释<b>为什么要这样做、输入输出分别是什么</b>。</p>
+<h2>第一站｜图5-9：聚类标签不等于主题名称 <span class="page-ref">原书第122–123页</span></h2>
+<figure><img src="figures/topic-vs-cluster.svg" alt="文档先被分到簇，再提取能描述主题的关键词"><figcaption>依据图5-9重绘：一组文档 → 一组代表性词语。例子为教学示意。</figcaption></figure>
+<p>假如簇0有100篇论文，聚类算法可以告诉我们这100篇属于同一组，却不会自动把组名写成“手语研究”。主题建模希望计算一组具有<b>较高代表性</b>的词，比如“手语”“翻译”“手势”，让人看到关键词就能理解研究方向。</p>
+<div class="explain"><b>三个不同概念：</b>簇（cluster）是一组数据点；主题（topic）是对这组文本在谈什么的概括；主题表示（topic representation）是对主题的具体描述形式，常见形式是一组关键词及权重。三者之间有关联，但不能直接画等号。</div>
+<p>在图5-10中，词表里的每个词都可以对不同主题有不同的重要程度。比如“dog”对宠物主题重要，对烹饪主题通常不重要。这也是后面需要给词<b>计算权重</b>的原因。</p>
+<h2>第二站｜图5-11至图5-16：BERTopic究竟由哪些步骤组成？ <span class="page-ref">原书第124–126页</span></h2>
+<figure><img src="figures/bertopic-pipeline.svg" alt="BERTopic分为语义聚类和主题关键词表示两个阶段"><figcaption>依据教材图5-11、图5-15、图5-16重绘：左边生成文档簇，右边解释每个簇。</figcaption></figure>
+<h3>第1步：嵌入模型</h3><p>输入是一篇篇论文摘要，例如“研究手语翻译系统”；输出是数值向量，例如书中之前使用 <code>gte-small</code> 得到384维表示。<b>嵌入向量的作用是编码语义相似性，而不是直接输出关键词。</b>这就是前面 Day 3 的内容。</p>
+<h3>第2步：UMAP降维</h3><p>把384维语义向量映射到更低维空间，帮助后续聚类。在本章的示例中，之前设置 <code>n_components=5</code>。这里没有删除文章；文章数量不变，变化的是每篇论文的特征维度。</p>
+<h3>第3步：HDBSCAN聚类</h3><p>依据降维后的向量分布进行聚类，得到每篇论文的组别。对无法稳定归组的文档，可以给出 <code>-1</code> 标签。这时已经知道“谁和谁是一组”，但还不知道每组应该用哪些关键词表示。</p>
+<h3>第4步：CountVectorizer词袋</h3><p>现在暂时放下嵌入向量，回到原始论文的<b>文本内容</b>。统计各个词出现多少次。之所以需要这一步，是因为最终我们希望输出“翻译、手语、手势”等<b>词语</b>，而不是一串384维浮点数。</p>
+<h3>第5步：c-TF-IDF加权</h3><p>仅按出现次数挑词会受到英语停用词及其他高频通用词的影响，因此需要计算某个词在当前组中<b>有没有区分度</b>。最后对每组关键词按照权重排序。</p>
+<div class="warn"><b>易错点：</b>BERTopic 不是让 BERT 直接写一段文字总结主题。书中这一实现是“语义聚类 + 统计式主题表示”。后续章节才介绍引入文本生成模型的表示模块。</div>
+<h2>第三站｜图5-12与图5-13：从词袋到 c-TF <span class="page-ref">原书第124–125页</span></h2>
+<figure><img src="figures/class-based-bow.svg" alt="将同一簇的文档词频合并统计"><figcaption>依据图5-12和图5-13重绘：同一簇内的词频合并统计。数值是教学例子。</figcaption></figure>
+<p>先看普通词袋。如果有两句话：<code>My cat is cute</code> 和 <code>That is a cute dog</code>，可以建立词表 <code>cat、dog、cute、is...</code>，记录每篇文本中每个词的出现次数。这相当于把自然语言转换为一个词频表。</p>
+<p>但我们现在不关心“单篇论文里哪个词最多”，而是关心“<b>整个主题簇</b>最有代表性的词”。因此 BERTopic 会把同一个簇中的文档合并看作一个大文档，再统计该簇的词频。原书将这一部分称为 <b>class-based TF</b>，即 c-TF。</p>
+<div class="explain"><b>从向量理解：</b>一篇文档的词袋可以表示为 <code>[1,0,2,0,...]</code>；一个簇的词袋可以理解为该簇多篇文本的词频合并结果。这里的“class”指聚类产生的分组，不是提前由人工标注的分类标签。</div>
+<h2>第四站｜图5-14：为什么还要 IDF？ <span class="page-ref">原书第125页</span></h2>
+<figure><img src="figures/ctfidf-weight.svg" alt="高频词与高区分度词不同，c-TF-IDF对其重新加权"><figcaption>依据图5-14重绘：出现次数与主题区分度要一起考虑。</figcaption></figure>
+<p>看两个词：<b>model</b> 可能在计算机科学所有方向的论文里都很多；<b>sign language</b> 则可能集中出现在手语翻译相关簇中。即使二者在这个簇内都常见，“sign language”一般更能向读者指出这个簇的特色。</p>
+<p>书中写出的逆文档频率部分为：</p>
+<div class="formula">IDF(x) = log( A / cfₓ + 1 )</div>
+<p><code>cfₓ</code> 是词 x 在所有簇中的总频次，<code>A</code> 是书中定义的所有簇平均词数。书中说明对数为自然对数。再与簇内的 c-TF 相乘，得到该词在某簇的 c-TF-IDF 权重。</p>
+<h3>用简化数字算一次（不是原书数据）</h3>
+<p>为了理解公式，假设 <code>A=10</code>，词“手语”在全部簇中只出现1次，而词“模型”在全部簇中出现10次，则：</p>
+<div class="formula">IDF(手语) = ln(10 / 1 + 1) ≈ 2.398
+IDF(模型) = ln(10 / 10 + 1) ≈ 0.693</div>
+<p>如果暂且假设这两个词在当前簇的 c-TF 都为同一个值，那么“手语”对应的权重会更大。这正是 IDF 想表达的：<b>在全体簇中不那么普遍的词，通常更有主题区分度。</b>这里固定相同 c-TF 只是用来单独观察 IDF 的作用，并不是对原书数据做了真实计算。</p>
+<div class="warn"><b>理解边界：</b>c-TF-IDF的权重不是“正确概率”，也不是“注意力权重”。它主要用于给主题词排序；权重大小还会受到语料词频、词表和统计处理方法的影响。</div>
+<h2>第五站｜图5-16与图5-17：为什么叫“模块化”？ <span class="page-ref">原书第126–127页</span></h2>
+<figure><img src="figures/bertopic-modular.svg" alt="BERTopic的嵌入降维聚类向量化和词语加权模块可以替换"><figcaption>依据图5-17重绘：不同的“算法积木”可替换，整体仍保持主题建模流程。</figcaption></figure>
+<p>比如你觉得 UMAP 不适合当前数据，可以尝试 PCA；不希望出现大量离群点时，可以考虑使用 K-means 聚类。主题表示部分也可以单独调整。它们是不同阶段的组件，不意味着任意拼接都会得到同样的好效果，而是<b>可以单独实验、单独替换</b>。</p>
+<h2>第六站｜逐行阅读书中第127页代码</h2>
+<pre><code>from bertopic import BERTopic
+
+topic_model = BERTopic(
+    embedding_model=embedding_model,
+    umap_model=umap_model,
+    hdbscan_model=hdbscan_model,
+    verbose=True
+).fit(abstracts, embeddings)
+
+topic_model.get_topic_info()</code></pre>
+<table><thead><tr><th>语句</th><th>实际做了什么</th><th>常见误解</th></tr></thead><tbody>
+<tr><td><code>BERTopic(...)</code></td><td>组装主题建模流程；传入已经定义好的组件</td><td>不是重新定义Transformer的每一层</td></tr>
+<tr><td><code>embedding_model=...</code></td><td>指定用于获取语义嵌入的模型</td><td>不是将词频统计替换为嵌入</td></tr>
+<tr><td><code>umap_model=...</code></td><td>指定降维算法实例</td><td>不是控制主题数量</td></tr>
+<tr><td><code>hdbscan_model=...</code></td><td>指定聚类模型实例</td><td>不是词语加权模型</td></tr>
+<tr><td><code>.fit(abstracts, embeddings)</code></td><td>用摘要及已有嵌入运行主题模型拟合</td><td>不代表重新训练预训练语言模型的参数</td></tr>
+<tr><td><code>get_topic_info()</code></td><td>得到主题编号、文档数及关键词概览</td><td>并不是预测一篇新论文的类别</td></tr>
+</tbody></table>
+<h3>再仔细读书中实验输出</h3>
+<p>原书第128页显示 <code>Topic=-1</code> 的 <code>Count=14520</code>，表示这些论文没被分入常规主题；<code>Topic=0</code> 的 <code>Count=2290</code>，关键词包含 <code>speech、asr、recognition</code>，很容易看出主要与语音识别方向有关。</p>
+<p>再调用 <code>get_topic(0)</code>，返回的是类似 <code>('speech', 0.028177...)</code> 的词—权重配对。第二个数字是主题表示中的词权重，<b>不是“这篇论文属于这个主题的概率”</b>。</p>
+<h2>第七站｜把整个第5章5.1至5.3连成一条线</h2>
+<p><b>Day 3：</b>输入44,949篇摘要，得到44,949个384维语义向量。</p>
+<p><b>Day 4：</b>UMAP把每篇的384维向量压缩为5维，方便聚类。</p>
+<p><b>Day 5：</b>HDBSCAN根据5维向量分布生成文档簇，允许离群点。</p>
+<p><b>Day 6：</b>CountVectorizer合并统计每个簇的词频，c-TF-IDF提取代表性关键词，使簇拥有可理解的主题表示。</p>
+<div class="explain"><b>一段话讲完本节：</b>BERTopic先借助文本嵌入找到“哪些论文相似”，再借助词频统计和c-TF-IDF找到“每组论文最具代表性的关键词”。它把语义建模和可解释的主题描述结合起来。</div>
+<h2>检查你是否真正学会了</h2>
+<details><summary>为什么不能直接从384维向量得到“手语、翻译、手势”？</summary><p>嵌入向量的每个维度一般不是一个可以直接命名的词语。为了得到能读懂的主题关键词，BERTopic在聚类后还需要对原始文本做词频统计和词语加权。</p></details>
+<details><summary>如果“model”出现100次而“sign language”只出现30次，后者还可能权重更高吗？</summary><p>可能。因为词语在全体簇中的常见程度不同。只看一个簇中的出现次数不够，还要考虑全局频次。不过最终权重仍取决于完整的 c-TF-IDF 计算，不能只凭这两个数字断言。</p></details>
+<details><summary>BERTopic里的 BERTopic.fit 会更新 gte-small 的全部Transformer参数吗？</summary><p>在本书展示的这套常规流程中，它主要执行嵌入、降维、聚类和主题表示的拟合，不等同于对嵌入模型进行有监督梯度微调。</p></details>
+<details><summary>把 HDBSCAN 换成 K-means 后，什么可能变化？</summary><p>生成的簇、主题数量、离群点处理、最终主题关键词都可能改变。即便c-TF-IDF方法不变，输入的簇组成发生变化也会影响主题表示。</p></details>
+</section>
 <section><h2>高亮与批注</h2><p class="muted">选中原文后，可以选择纯背景色的“高亮”或只显示下划线的“批注”。标记不会修改正文DOM结构。</p></section>
 <small>依据《图解大模型》第122–128页、图5-9至图5-17整理；中文示例另有注明。</small>
 </div><script src="annotations.js"></script></body></html>
