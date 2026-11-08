@@ -25,6 +25,7 @@
 #annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
 </style><link rel="stylesheet" href="annotations.css">
+<link rel="stylesheet" href="lesson-expanded.css">
 </head>
 <body data-study-day="4"><div class="wrap">
 <header><span class="pill">DAY 4 · 第五章</span><h1>嵌入向量降维：从384维到5维</h1><p>《图解大模型：生成式 AI 原理与实战》｜第5章 5.2.2</p><small>原书第117–118页｜预计 30–40 分钟</small></header>
@@ -54,6 +55,30 @@ reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre><p>代码�
 <details><summary>5. random_state=42 有什么作用？</summary><p>使不同会话中的结果可重现，但会禁用并行处理，使训练变慢。</p></details></section>
 <section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
 <small>依据《图解大模型：生成式 AI 原理与实战》第117–118页（第5.2.2节）整理。参数说明与流程依据原书；辅助类比属于教学补充。</small>
+<section class="study-longread" id="expanded-day4"><div class="kicker">加深讲解 · 原书第117—118页</div><h2>一、为什么从384维降到5维？</h2>
+<figure><img src="figures/umap-reduction.svg" alt="UMAP对矩阵进行维度压缩但保留文档行数"><figcaption>教学重绘：每篇摘要的向量维数变小，文章数量不变。</figcaption></figure>
+<p>高维空间中的数据关系对于某些聚类算法比较难处理。书中先用文本嵌入捕捉语义，再使用UMAP寻找更低维的表示。这里的目标不是重新理解一次文章，也不是选取最重要的5个词，而是生成新的5维数值特征，让后续聚类更方便。</p>
+<h3>为什么不能直接删除379列？</h3><p>如果直接留下前5列，原来分散在384维中的许多信息可能彻底丢失。降维方法试图从整体结构中建立低维映射。尽管这种映射仍会丢失信息，但通常比随意删列更有方法依据。</p>
+<h2>二、PCA 和 UMAP在本书中怎么区分？</h2>
+<table><thead><tr><th>概念</th><th>这本书强调什么</th></tr></thead><tbody><tr><td>PCA</td><td>主成分分析，经典降维技术</td></tr><tr><td>UMAP</td><td>更适合本书所关注的非线性结构和关系</td></tr></tbody></table>
+<p>这里的比较基于本节实验选择，不是“UMAP在一切数据上都更好”。书中同样提醒降维无法完全无损。UMAP的二维可视化只应当作近似图，不能直接把散点图上的距离等同于原始384维距离。</p>
+<h2>三、参数的含义要联系下一步聚类理解</h2>
+<pre><code>umap_model = UMAP(
+    n_components=5,
+    min_dist=0.0,
+    metric="cosine",
+    random_state=42
+)
+reduced_embeddings = umap_model.fit_transform(embeddings)</code></pre>
+<p><code>n_components=5</code> 决定每个低维向量只有5个数值；<code>min_dist=0.0</code> 通常让嵌入点更紧密；<code>metric="cosine"</code> 是这个UMAP降维阶段使用的距离度量；<code>random_state=42</code> 用于复现结果，但书中也提醒它会禁用并行处理，可能使速度变慢。</p>
+<div class="explain"><b>容易混淆：</b>下一节HDBSCAN使用 <code>metric="euclidean"</code>。二者并不矛盾：UMAP在原始高维空间中学习映射，HDBSCAN在降维后的空间中计算距离，作用阶段不同。</div>
+<h2>四、完整的形状变化</h2>
+<div class="formula">嵌入模型输出： 44949 × 384
+           ↓ UMAP(n_components=5)
+降维模型输出： 44949 × 5</div>
+<p>这不仅是矩阵数学题，还是对整个数据流水线的检查：如果文章数量意外改变，可能是中途过滤或预处理发生了变化；如果降维后的列数不是5，就需要检查参数及运行结果。</p>
+<details><summary>自测：5维向量有5个主题吗？</summary><p>没有。5是表示的维度，不是簇的数量或主题数。主题数需要后续聚类模型来发现。</p></details>
+</section>
 </div>
 
 
