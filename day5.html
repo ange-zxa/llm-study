@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 5｜HDBSCAN 文本聚类与结果检查</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#192238;font:16px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.wrap{max-width:900px;margin:auto;padding:28px 20px 90px}header,section{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:26px 32px;margin-bottom:18px}header{background:linear-gradient(120deg,#eaf2ff,#fff)}h1{font-size:30px;line-height:1.35;margin:8px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:17px;margin:20px 0 8px}.muted,small{color:#64748b}.pill{display:inline-block;color:#1d4ed8;background:#dbeafe;border-radius:20px;padding:2px 10px;font-size:13px}.call{background:#eff6ff;padding:12px 16px;border-left:4px solid #2563eb;border-radius:8px;margin:14px 0}.good{background:#f0fdf4;border-left-color:#16a34a}.warn{background:#fff7ed;border-left-color:#ea580c}pre{background:#101827;color:#e2e8f0;padding:16px;border-radius:12px;white-space:pre-wrap;overflow:auto;font-size:13px;line-height:1.7}code{font-family:ui-monospace,Consolas,monospace}p code{background:#e9eef5;padding:1px 4px;border-radius:4px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e7eb;padding:9px;text-align:left}th{background:#f8fafc}.flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.step{flex:1 1 140px;border:1px solid #dbe2ea;border-radius:12px;padding:14px;text-align:center;background:#fff}.arrow{color:#94a3b8;font-size:22px}details{border:1px solid #dbe2ea;padding:12px 16px;border-radius:12px;margin:8px 0}summary{cursor:pointer;font-weight:600}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button,#editor button{border:1px solid #cbd5e1;background:white;border-radius:8px;padding:7px 12px;cursor:pointer}#notes{display:none;background:#eff6ff;padding:12px;border-radius:10px;margin-top:12px}.note{border-bottom:1px solid #dbe2ea;padding:8px 0;white-space:pre-wrap}#annotate{display:none;position:fixed;bottom:16px;right:16px;z-index:10;background:#1d4ed8;color:white;border:0;border-radius:10px;padding:10px 15px;cursor:pointer}#editor{display:none;position:fixed;bottom:18px;right:18px;width:min(360px,calc(100vw - 36px));z-index:20;background:white;box-shadow:0 12px 45px #0003;padding:20px;border:1px solid #ddd;border-radius:14px}#editor textarea{width:100%;height:100px;padding:10px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:600px){header,section{padding:20px}.wrap{padding:14px}}
+/* Selection actions: highlight and annotation are visually distinct */
+.annotation-mark{display:inline;border-radius:2px;padding:0;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.annotation-highlight{background:#ffe89a!important;color:inherit!important;text-decoration:none!important;box-shadow:none!important;cursor:inherit}
+.annotation-underline{background:transparent!important;color:inherit!important;text-decoration:underline!important;text-decoration-color:#2563eb!important;text-decoration-thickness:1.5px!important;text-underline-offset:3px!important;cursor:pointer}
+.annotation-underline:hover{text-decoration-thickness:2px!important}
+.annotation-ui{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:#172033}
+.annotation-toolbar{position:fixed;z-index:99999;display:none;align-items:center;gap:6px;padding:6px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.2);width:max-content;max-width:calc(100vw - 16px)}
+.annotation-toolbar button{border:1px solid #d0d5dd;background:#fff;border-radius:8px;padding:7px 11px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;line-height:1.3;white-space:nowrap}
+.annotation-toolbar #makeHighlight{background:#fff4c2;border-color:#e6c65c}
+.annotation-toolbar #makeAnnotation{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+#annotationToolbarStatus{font-size:11px;color:#b45309;max-width:180px}
+#annotationEditor,#annotationBubble{position:fixed;z-index:99998;display:none;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));background:#fff;border:1px solid #dbe3ef;border-radius:16px;padding:15px;box-shadow:0 16px 45px rgba(15,23,42,.2)}
+#annotationEditor h3,#annotationBubble h3{font-size:15px;margin:0 0 8px}
+#annotationEditor textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #d0d5dd;border-radius:10px;padding:10px;font:14px/1.6 inherit;outline:none}
+#annotationEditor textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px #dbeafe}
+.annotation-buttons{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.annotation-buttons button{border:1px solid #d0d5dd;background:#fff;border-radius:9px;padding:7px 11px;cursor:pointer;font:inherit}
+.annotation-buttons .primary{background:#2563eb;border-color:#2563eb;color:#fff}
+#annotationBubble .quote{font-size:12px;color:#64748b;background:#f8fafc;padding:8px;border-radius:8px;margin:8px 0;max-height:72px;overflow:auto}
+#annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
+</style><link rel="stylesheet" href="annotations.css">
+</head>
+<body data-study-day="5"><div class="wrap">
+<header><span class="pill">DAY 5 · 第五章</span><h1>HDBSCAN 文本聚类与结果检查</h1><p>《图解大模型：生成式 AI 原理与实战》｜5.2.3 对降维后的嵌入向量进行聚类 · 5.2.4 检查生成的簇</p><small>原书第119–122页 · 图5-6、图5-7、图5-8 · 建议35–45分钟</small></header>
+<section><h2>01｜今天学习什么？</h2><p>前两天我们已经得到了 <code>embeddings</code>（44,949 × 384）和降维后的 <code>reduced_embeddings</code>（44,949 × 5）。今天的任务是：<b>根据这些5维向量分组，然后核查每组包含哪些文章。</b></p>
+<div class="flow"><div class="step">44,949篇摘要<br><b>gte-small</b></div><div class="arrow">→</div><div class="step">384维文档向量<br><b>UMAP</b></div><div class="arrow">→</div><div class="step">5维向量<br><b>HDBSCAN</b></div><div class="arrow">→</div><div class="step">簇标签或 -1<br><b>检查簇</b></div></div>
+<div class="call">关联原书图5-6：聚类算法的输入不是原始文章文字，也不是嵌入模型本身，而是已经降维的嵌入向量。</div></section>
+<section><h2>02｜为什么选择 HDBSCAN，而不是 K-means？</h2><p>原书第119页比较了两类算法。<b>K-means</b> 是一种基于质心的聚类算法，通常要求事先指定 <code>k</code>，即希望得到多少个簇。但我们不清楚 44,949 篇 NLP 文章中究竟存在多少个主题。<b>HDBSCAN</b> 依据数据的密度结构发现簇，不需要预先指定最终簇的数量。</p>
+<table><thead><tr><th>比较</th><th>K-means</th><th>HDBSCAN</th></tr></thead><tbody>
+<tr><td>聚类依据</td><td>点与质心的距离</td><td>空间中的密度结构</td></tr>
+<tr><td>预设簇数量</td><td>通常需要指定 k</td><td>不需要指定最终簇数量</td></tr>
+<tr><td>离群点</td><td>普通 K-means 仍会分配给某一簇</td><td>允许不归属于任何簇</td></tr></tbody></table>
+<p>图5-7中的关键区别，是是否允许某个点作为<b>离群点（outlier）</b>保留下来，而不是被强行归类。</p></section>
+<section><h2>03｜用一个直观例子理解密度聚类</h2><p>假设我们把论文向量画在平面上：一堆论文讨论机器翻译，一堆讨论语音识别，还有少量论文研究非常小众的问题。</p>
+<p>如果某些向量在局部空间形成<b>足够密集的群体</b>，HDBSCAN 就可以把它们组织为一个簇；而那些没有稳定形成密集群体的点，可能标记为 <code>-1</code>。</p>
+<div class="call good"><b>注意：</b><code>-1</code> 并不等于“错误论文”，只表示聚类算法没有把它可靠地归入某个簇。在学术数据中，小众研究领域可能恰恰是有价值的信息。</div></section>
+<section><h2>04｜原书 HDBSCAN 代码逐行讲解</h2>
+<pre><code>from hdbscan import HDBSCAN
+
+# 拟合模型并提取簇
+hdbscan_model = HDBSCAN(
+    min_cluster_size=50,
+    metric="euclidean",
+    cluster_selection_method="eom"
+).fit(reduced_embeddings)
+
+clusters = hdbscan_model.labels_
+
+# 我们生成了多少个簇？
+len(set(clusters))
+# 书中结果：156</code></pre>
+<table><thead><tr><th>部分</th><th>作用</th></tr></thead><tbody>
+<tr><td><code>HDBSCAN(...)</code></td><td>创建密度聚类模型并设置参数</td></tr>
+<tr><td><code>min_cluster_size=50</code></td><td>设定最小簇规模为50；书中说明减小它通常能得到更多簇</td></tr>
+<tr><td><code>metric="euclidean"</code></td><td>使用欧氏距离计算降维空间中的距离</td></tr>
+<tr><td><code>cluster_selection_method="eom"</code></td><td>使用 EOM 方式从层次聚类结构中选择簇；本节没有展开其内部推导</td></tr>
+<tr><td><code>.fit(reduced_embeddings)</code></td><td>使用降维后的向量拟合聚类模型</td></tr>
+<tr><td><code>.labels_</code></td><td>获取每篇论文对应的簇标签，例如0、1、2或-1</td></tr>
+<tr><td><code>len(set(clusters))</code></td><td>计算不同标签的数量，书中输出156</td></tr>
+</tbody></table>
+<div class="call warn"><b>细节辨析：</b>书中把 <code>156</code> 称作“156个簇”。但该表达式统计的是<b>不同标签数量</b>，如果出现离群点标签 <code>-1</code>，它也会被统计在内。严格计算有效簇数量可以写：<code>len(set(clusters) - {-1})</code>。这属于对书中代码统计含义的补充辨析。</div></section>
+<section><h2>05｜为什么降维用 cosine，聚类又用 euclidean？</h2>
+<p>注意两段代码中的 <code>metric</code> 处在<b>不同算法</b>里：</p>
+<pre><code># Day 4：在原始384维向量上学习降维映射
+UMAP(n_components=5, metric="cosine", ...)
+
+# Day 5：在降维后的5维向量上执行聚类
+HDBSCAN(metric="euclidean", ...)</code></pre>
+<p>因此不是同一批原始向量先用余弦距离聚类、再用欧氏距离聚类。<b>UMAP 的度量用于构造降维映射；HDBSCAN 的度量用于降维空间中的聚类。</b></p>
+<p>两种距离度量能否组合使用、哪种组合最好，需要结合数据和实验检验。本书在这里直接采用上述参数，没有证明它们对所有数据集都最优。</p></section>
+<section><h2>06｜5.2.4 检查生成的簇：簇0在讨论什么？</h2><p>模型给出簇标签后，数字 <code>0</code>、<code>1</code> 并不会直接告诉我们具体主题是什么。原书因此从簇0中取出前三篇论文的摘要进行人工检查。</p>
+<pre><code>import numpy as np
+
+# 打印簇0中的前三个文档
+cluster = 0
+for index in np.where(clusters == cluster)[0][:3]:
+    print(abstracts[index][:300] + "... \\n")</code></pre>
+<p><code>clusters == cluster</code>：判断哪些位置的簇标签等于0；<code>np.where(...)[0]</code>：取这些位置的索引；<code>[:3]</code>：取前三个索引；<code>abstracts[index][:300]</code>：只看对应摘要的前300个字符。</p>
+<p>书中示例显示，这几篇摘要主要涉及<b>美国手语（ASL）翻译</b>、手势语言以及相关翻译系统。因此我们可以暂时把这个簇理解成“手语相关论文簇”。</p>
+<div class="call warn"><b>代码阅读纠正：</b>原书文字提到“随机抽取几个文档”，但显示的 Python 代码 <code>[:3]</code> 实际只是取<b>前三个匹配结果</b>，并没有执行随机采样。此处保留原书代码的实际行为。</div></section>
+<section><h2>07｜用二维散点图查看聚类结果</h2>
+<p>原书第121页为了画图，再次使用 UMAP，把原始384维嵌入向量降到2维。<b>这一步是为了可视化，不是重新训练 HDBSCAN。</b></p>
+<pre><code>import pandas as pd
+
+reduced_embeddings = UMAP(
+    n_components=2,
+    min_dist=0.0,
+    metric="cosine",
+    random_state=42
+).fit_transform(embeddings)
+
+df = pd.DataFrame(reduced_embeddings, columns=["x", "y"])
+df["title"] = titles
+df["cluster"] = [str(c) for c in clusters]
+
+clusters_df = df.loc[df.cluster != "-1", :]
+outliers_df = df.loc[df.cluster == "-1", :]</code></pre>
+<p>书中随后用 <code>matplotlib</code> 绘图：把离群点显示为灰色，把已分配到簇的点按簇标签着色。</p>
+<pre><code>import matplotlib.pyplot as plt
+
+plt.scatter(outliers_df.x, outliers_df.y,
+            alpha=0.05, s=2, c="grey")
+plt.scatter(
+    clusters_df.x, clusters_df.y,
+    c=clusters_df.cluster.astype(int),
+    alpha=0.6, s=2, cmap="tab20b"
+)
+plt.axis("off")</code></pre>
+<div class="call">阅读图5-8时要注意两个限制：<b>①</b>二维投影会损失信息，散点之间的视觉远近不能完全等价于原始高维语义距离；<b>②</b>颜色会被循环使用，因此<b>颜色相同不一定属于同一个簇</b>。原书强调仍然需要人工检查。</div></section>
+<section><h2>08｜从聚类转向主题建模</h2>
+<p>完成聚类后，我们已经知道哪些文档在一起；接下来的问题是：<b>如何用关键词解释每一组文档在谈论什么？</b></p>
+<p>原书第122页开始介绍主题建模。以“手语”簇为例，主题建模尝试输出“手势”“语言”“翻译”之类有代表性的关键词，而不是仅给一个无法解释的簇编号。这就是 Day 6 的学习方向。</p></section>
+<section><h2>09｜自测题（点击展开答案）</h2>
+<details><summary>1. 为什么此处优先考虑 HDBSCAN 而不是 K-means？</summary><p>主要因为事先不知道应该生成多少个簇，而且希望允许有些论文成为离群点。HDBSCAN不需要预先指定最终簇数量。</p></details>
+<details><summary>2. <code>clusters</code> 中的每个值代表什么？</summary><p>代表与该位置对应的论文的簇标签。普通数值是簇编号，-1通常表示离群点。</p></details>
+<details><summary>3. <code>min_cluster_size=50</code> 是什么意思？</summary><p>设定算法的最小簇规模参数为50。书中指出减小它通常可得到更多簇。</p></details>
+<details><summary>4. 为什么绘图前要从384维再降到2维？</summary><p>这是为了把文档显示在x-y二维平面上；此前5维降维用于聚类。两次降维目的不同。</p></details>
+<details><summary>5. 为什么颜色相同不能证明属于同一簇？</summary><p>原书示例中簇数多、调色板颜色有限，因此绘图库会循环使用颜色。</p></details></section>
+<section><h2>本页批注</h2><p class="muted">选中原文后，左键选择「高亮」或「添加批注」。高亮只显示背景色，批注显示下划线，点击对应位置即可查看批注；不会改变正文HTML结构。</p></section>
+<small>内容依据用户提供的《图解大模型》中文版本第119–122页。对不同标签计数和前三条样本并非随机的辨析为代码层面的补充说明。</small>
+</div>
+<script src="annotations.js"></script>
+</body></html>
