@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="990" height="380" viewBox="0 0 990 380" role="img"><defs><style>.t{font:16px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#182b49}.small{font:13px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#52657e}.hd{font:bold 20px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#182b49}.box{stroke:#cbd5e1;stroke-width:1.5;rx:12}.line{stroke:#94a3b8;stroke-width:2.6;fill:none;marker-end:url(#arr)}</style><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L8 3L0 6" fill="none" stroke="#94a3b8" stroke-width="1.5"/></marker></defs><rect width="990" height="380" fill="#fbfdff"/>
+<text class="hd" x="25" y="37">c-TF-IDF：出现得多，还要「有区分度」</text>
+<rect class="box" x="25" y="65" width="435" height="260" fill="#eff6ff"/><text class="t" x="42" y="98" font-weight="bold">簇 A：手语 / 翻译研究</text>
+<text class="small" x="42" y="126">「模型」在这里出现很多次</text><rect x="46" y="143" width="350" height="21" rx="5" fill="#93c5fd"/>
+<text class="small" x="42" y="199">「手语」在这里也出现很多次</text><rect x="46" y="216" width="323" height="21" rx="5" fill="#60a5fa"/>
+<text class="small" x="42" y="279">只看词频，两者可能很难区分。</text>
+<path class="line" d="M471 197H528"/>
+<rect class="box" x="540" y="65" width="422" height="260" fill="#f0fdf4"/><text class="t" x="558" y="98" font-weight="bold">放到全部簇中比较</text>
+<text class="small" x="558" y="132">「模型」：许多簇里都有 → 区分度低</text>
+<rect x="562" y="148" width="120" height="22" rx="5" fill="#d1fae5"/>
+<text class="small" x="558" y="205">「手语」：主要出现在簇 A → 区分度高</text>
+<rect x="562" y="221" width="335" height="22" rx="5" fill="#34d399"/>
+<text class="small" x="558" y="281">高 c-TF × 高 IDF → 代表性权重更大</text>
+<text class="small" x="25" y="355">公式（书中图5-14）：c-TF-IDF(x,c) = c-TF(x,c) × log(A / cfₓ + 1)</text></svg>
