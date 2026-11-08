@@ -25,6 +25,7 @@
 #annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
 </style><link rel="stylesheet" href="annotations.css">
+<link rel="stylesheet" href="lesson-expanded.css">
 </head>
 <body data-study-day="3"><div class="wrap">
 <header><span class="pill">DAY 3 · 每日学习</span><h1>ArXiv 数据集与文档嵌入</h1><p>《图解大模型：生成式 AI 原理与实战》｜第5章 5.1、5.2.1</p><small>原书第115–116页｜预计 30–40 分钟</small></header>
@@ -49,6 +50,35 @@ embeddings = embedding_model.encode(
 <section><h2>06｜自测</h2><details><summary>1. 为什么使用摘要而不是直接对文章编号聚类？</summary><p>文章编号只用于标识，不表达文章讨论的语义内容。摘要包含文本内容，嵌入模型才能据此形成语义表示。</p></details><details><summary>2. 44,949 × 384 分别代表什么？</summary><p>44,949 篇摘要，每篇摘要对应一个 384 维向量。</p></details><details><summary>3. 为什么要选择语义相似度表现较好的嵌入模型？</summary><p>聚类的目标是发现语义相似的文档组，嵌入向量应尽量保留文本语义关系。</p></details><details><summary>4. embedding model 和 cluster model 是一回事吗？</summary><p>不是。嵌入模型负责把文档变成向量；聚类模型负责根据向量之间的关系形成簇。</p></details></section>
 <section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
 <small>依据用户提供的《图解大模型：生成式 AI 原理与实战》第115–116页整理。概念解释是辅助理解，未将书外方法替换为原书内容。</small>
+<section class="study-longread" id="expanded-day3"><div class="kicker">加深讲解 · 原书第115—116页</div><h2>一、从原始论文到语义矩阵</h2>
+<figure><img src="figures/embedding-matrix.svg" alt="一篇文章被编码为384维向量，所有文章形成二维矩阵"><figcaption>教学重绘：论文摘要通过文本嵌入模型变为一个数值向量。</figcaption></figure>
+<p>书中的数据集包含44,949篇 ArXiv cs.CL 文章摘要。<code>abstracts</code> 是摘要列表；<code>titles</code> 是对应的标题列表。前者用于编码语义，后者方便在后面查看、展示聚类结果。</p>
+<h3>为什么是矩阵而不是一个向量？</h3><p>一个摘要对应一个384维向量，也就是一行384个数；44,949个摘要对应44,949行。<code>embeddings.shape</code> 才会输出 <code>(44949,384)</code>。这里第一维是文档数量，第二维是每个文档的表示维度，不能反过来理解。</p>
+<h2>二、嵌入表示和词袋表示有什么差别？</h2>
+<p><b>词袋：</b>使用词频表示文本，强调哪些词出现了、出现几次；<b>语义嵌入：</b>借助预训练模型把文本转换成更紧凑的数值表示，争取保留句子或文档的语义关系。因此，不同的词语也可能得到相似的语义向量。例如“机器翻译系统”和“自动跨语言转换”字面不同，但研究意义可能相近。</p>
+<div class="explain"><b>注意：</b>这不是说任意嵌入模型都能完美理解语义，也不是说384个数字各自对应一个确定的中文词。向量各维往往共同作用，语义信息是分布式表示。</div>
+<h2>三、逐行解释原书代码</h2>
+<pre><code>from datasets import load_dataset
+dataset = load_dataset("maartengr/arxiv_nlp")["train"]
+abstracts = dataset["Abstracts"]
+titles = dataset["Titles"]
+
+from sentence_transformers import SentenceTransformer
+embedding_model = SentenceTransformer("thenlper/gte-small")
+embeddings = embedding_model.encode(abstracts, show_progress_bar=True)
+
+print(embeddings.shape)
+# (44949, 384)</code></pre>
+<table><thead><tr><th>代码</th><th>重点理解</th></tr></thead><tbody>
+<tr><td><code>load_dataset(...)</code></td><td>加载数据集，不是训练NLP模型</td></tr>
+<tr><td><code>["train"]</code></td><td>选择数据分区，不表示这一节要进行有监督训练</td></tr>
+<tr><td><code>SentenceTransformer(...)</code></td><td>加载预训练的嵌入模型</td></tr>
+<tr><td><code>encode(abstracts)</code></td><td>对摘要列表编码，得到整个文档嵌入矩阵</td></tr>
+<tr><td><code>show_progress_bar=True</code></td><td>显示处理进度，和语义维度无关</td></tr>
+</tbody></table>
+<h2>四、聚类为何要先有向量？</h2><p>传统距离和聚类算法处理的是可计算的数值对象。文本本身不方便直接使用这些算法，因此先转为数值向量。如果语义关系保留得较好，讨论相近主题的论文在向量空间里就更有希望靠近；下一步才考虑将这些高维向量降到较低维度。</p>
+<details><summary>自测：为什么 384 不表示每篇摘要恰好有384个词？</summary><p>384是 gte-small 生成的固定向量维数，与原文词数不同；长短不同的摘要都可以获得同维度表示。</p></details>
+</section>
 </div>
 
 
