@@ -60,8 +60,7 @@ messages = [
 <details><summary>将 System 的输出格式改变，是否代表模型接受了微调？</summary><p>不是。改变的是当前请求的指令，模型参数没有因此更新。</p></details>
 <details><summary>分类与聚类最关键的区别是什么？</summary><p>分类通常根据已定义的目标类别分配标签，而无监督聚类尝试从无人工类别标签的文本中发现相似组别。</p></details>
 <details><summary>第5.2节通用聚类流程包含哪三个步骤？</summary><p>嵌入文档、对嵌入向量降维、对降维后的向量聚类。</p></details></section>
-<section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
-<small>原书依据：第111–116页；中文代码示例及解释是教学补充，不属于逐字原文。</small><section class="study-longread" id="expanded-day2"><div class="kicker">加深讲解 · 原书4.6.2～4.7与第5章导读</div><h2>一、代码里的prompt和messages，不是同一种东西</h2>
+<section class="study-longread" id="expanded-day2"><div class="kicker">加深讲解 · 原书4.6.2～4.7与第5章导读</div><h2>一、代码里的prompt和messages，不是同一种东西</h2>
 <figure><img src="figures/api-message-flow.svg" alt="提示词字符串与消息列表之间的关系"><figcaption>教学重绘：字符串模板经过替换形成user消息，再和system一起组成messages。</figcaption></figure>
 <p>一个字符串变量与一个消息列表属于不同的数据结构。假设 <code>prompt="判断：[DOCUMENT]"</code>，<code>document="电影很精彩"</code>，先用 <code>replace</code> 得到完整的文本指令；再把它放入 <code>{"role":"user","content":...}</code>。这样才能和其他消息一起传入 <code>client.chat.completions.create()</code>。</p>
 <h3>system一定要写成“你是一个助手”吗？</h3><p>不需要。书中只是给了一个简单例子。system通常用来提出跨任务的要求；user放入当前要处理的具体文本。这里的角色不是模型架构中的Encoder或Decoder，而是API输入数据的一部分。</p>
@@ -82,6 +81,8 @@ messages = [
 <details><summary>自测：为什么messages中的user可以保存一个完整prompt？</summary><p>因为prompt变量在这段代码中只是字符串，而user消息中的content本来就是存放文本内容的位置。先把document填入prompt，再放进content即可。</p></details>
 <details><summary>自测：聚类得到“簇3”意味着主题叫“簇3”吗？</summary><p>不意味着。簇编号只是算法给分组的标识，还需要检查文档内容，或进一步用主题建模输出关键词。</p></details>
 </section>
+<section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
+<small>原书依据：第111–116页；中文代码示例及解释是教学补充，不属于逐字原文。</small>
 </div>
 
 
