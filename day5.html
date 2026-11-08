@@ -26,6 +26,7 @@
 @media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
 .cluster-comparison{margin:18px 0}.cluster-comparison img{display:block;width:100%;max-width:758px;height:auto;margin:0 auto}.cluster-comparison figcaption{margin-top:6px;color:#64748b;font-size:14px;text-align:center}
 </style><link rel="stylesheet" href="annotations.css">
+<link rel="stylesheet" href="lesson-expanded.css">
 </head>
 <body data-study-day="5"><div class="wrap">
 <header><span class="pill">DAY 5 · 第五章</span><h1>HDBSCAN 文本聚类与结果检查</h1><p>《图解大模型：生成式 AI 原理与实战》｜5.2.3 对降维后的嵌入向量进行聚类 · 5.2.4 检查生成的簇</p><small>原书第119–122页 · 图5-6、图5-7、图5-8 · 建议35–45分钟</small></header>
@@ -136,6 +137,29 @@ plt.axis("off")</code></pre>
 <details><summary>5. 为什么颜色相同不能证明属于同一簇？</summary><p>原书示例中簇数多、调色板颜色有限，因此绘图库会循环使用颜色。</p></details></section>
 <section><h2>本页批注</h2><p class="muted">选中原文后，左键选择「高亮」或「添加批注」。高亮只显示背景色，批注显示下划线，点击对应位置即可查看批注；不会改变正文HTML结构。</p></section>
 <small>内容依据用户提供的《图解大模型》中文版本第119–122页。对不同标签计数和前三条样本并非随机的辨析为代码层面的补充说明。</small>
+<section class="study-longread" id="expanded-day5"><div class="kicker">加深讲解 · 原书第119—122页</div><h2>一、看图理解 HDBSCAN 为什么能识别离群点</h2>
+<figure><img src="figures/hdbscan-outliers.svg" alt="Kmeans与HDBSCAN对离群点的不同处理"><figcaption>对应原书图5-7的概念重绘：K-means通常把点分配给某个簇；HDBSCAN允许将稀疏点标记为离群点。</figcaption></figure>
+<p>K-means是基于质心的算法，需要事先给出想要的簇数量。假设指定 k=3，那么普通K-means会把每个点分配给这三个簇之一。HDBSCAN从局部密度结构出发，不需要你先指定具体的簇数，也能把不容易归组的点设为 <code>-1</code>。</p>
+<div class="warn"><b>离群点不是坏数据：</b>论文摘要中可能存在非常小众的研究方向，也可能是文本异常。HDBSCAN只是在当前表示和参数下没有把它归入稳定的簇，不能直接判定论文质量。</div>
+<h2>二、训练HDBSCAN时，输入输出是什么？</h2>
+<div class="formula">输入：reduced_embeddings ∈ R^(44949 × 5)
+       ↓ HDBSCAN.fit(...)
+输出：clusters = [0, 5, -1, 0, 2, ...]
+      每篇论文对应一个整数簇标签</div>
+<p>书中的 <code>clusters = hdbscan_model.labels_</code> 输出的是每篇论文的标签，长度与输入论文数量一致。这里 <code>-1</code> 是离群点标志，其余整数只是簇编号，并不是自然语言主题名。</p>
+<h2>三、HDBSCAN三个参数再解释</h2><p><code>min_cluster_size=50</code> 设定簇的最小规模。减小它可能发现更多较小簇，但不是保证簇数必定增加；<code>metric="euclidean"</code> 表示降维后空间中的欧氏距离；<code>cluster_selection_method="eom"</code> 是从层次密度聚类结构中选择最终簇的方法。</p>
+<p>本节书中给出了 <code>len(set(clusters)) = 156</code>。代码的直接含义是“有156种不同的标签”，若存在 <code>-1</code> 就应把它扣除才能计算不含离群点的有效簇数：</p>
+<pre><code>all_labels = set(clusters)
+valid_labels = all_labels - {-1}
+n_clusters = len(valid_labels)</code></pre>
+<h2>四、如何确定一组文档讨论什么？</h2>
+<p>书中使用 <code>np.where(clusters == 0)[0][:3]</code> 找到簇0中的前三篇摘要，发现它们与手语翻译、手语识别等内容有关。注意，这段代码没有随机打乱操作，所以其实是<b>取前三篇匹配结果</b>，不是随机采样。</p>
+<h2>五、为什么还要生成二维散点图？</h2>
+<p>前面HDBSCAN在5维空间运行，而人类无法直接画出5维散点图。因此书中另外使用 <code>UMAP(n_components=2)</code> 将原始384维向量映射到x-y二维平面，并按聚类标签上色。这个绘图用的二维坐标不是重新进行一次HDBSCAN聚类的必需输入。</p>
+<div class="explain"><b>看图的两个限制：</b>二维投影会损失高维信息；颜色有限，书中绘图库会循环颜色，因此两个点颜色相同也不一定属于同一个簇。要理解簇的真正含义仍需要看文本。</div>
+<h2>六、铺垫Day6：聚类后为什么还需要BERTopic？</h2><p>这一节最终只能告诉我们“论文A和论文B属于簇0”，无法自动回答“簇0最重要的研究主题是什么”。Day6会使用词袋统计和c-TF-IDF，将这些簇转换成可读的主题关键词。</p>
+<details><summary>自测：如果簇0里都是手语翻译论文，算法为什么不会自动把簇0改名为“手语”？</summary><p>HDBSCAN主要操作数值向量和簇标签，它不会自动从原始文本中生成可解释的主题描述。主题表示需要另外一套关键词提取或生成机制。</p></details>
+</section>
 </div>
 <script src="annotations.js"></script>
 </body></html>
