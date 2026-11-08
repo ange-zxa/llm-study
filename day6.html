@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 6｜BERTopic 与 c-TF-IDF</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#192238;font:16px/1.85 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}.wrap{max-width:900px;margin:auto;padding:28px 20px 90px}header,section{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:26px 32px;margin-bottom:18px}header{background:linear-gradient(120deg,#eaf2ff,#fff)}h1{font-size:30px;line-height:1.35;margin:8px 0}h2{font-size:21px;margin:0 0 12px}h3{font-size:17px;margin:20px 0 8px}.muted,small{color:#64748b}.pill{display:inline-block;color:#1d4ed8;background:#dbeafe;border-radius:20px;padding:2px 10px;font-size:13px}.call{background:#eff6ff;padding:12px 16px;border-left:4px solid #2563eb;border-radius:8px;margin:14px 0}.good{background:#f0fdf4;border-left-color:#16a34a}.warn{background:#fff7ed;border-left-color:#ea580c}pre{background:#101827;color:#e2e8f0;padding:16px;border-radius:12px;white-space:pre-wrap;overflow:auto;font-size:13px;line-height:1.7}code{font-family:ui-monospace,Consolas,monospace}p code{background:#e9eef5;padding:1px 4px;border-radius:4px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e7eb;padding:9px;text-align:left}th{background:#f8fafc}.flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.step{flex:1 1 140px;border:1px solid #dbe2ea;border-radius:12px;padding:14px;text-align:center;background:#fff}.arrow{color:#94a3b8;font-size:22px}details{border:1px solid #dbe2ea;padding:12px 16px;border-radius:12px;margin:8px 0}summary{cursor:pointer;font-weight:600}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button,#editor button{border:1px solid #cbd5e1;background:white;border-radius:8px;padding:7px 12px;cursor:pointer}#notes{display:none;background:#eff6ff;padding:12px;border-radius:10px;margin-top:12px}.note{border-bottom:1px solid #dbe2ea;padding:8px 0;white-space:pre-wrap}#annotate{display:none;position:fixed;bottom:16px;right:16px;z-index:10;background:#1d4ed8;color:white;border:0;border-radius:10px;padding:10px 15px;cursor:pointer}#editor{display:none;position:fixed;bottom:18px;right:18px;width:min(360px,calc(100vw - 36px));z-index:20;background:white;box-shadow:0 12px 45px #0003;padding:20px;border:1px solid #ddd;border-radius:14px}#editor textarea{width:100%;height:100px;padding:10px;border:1px solid #cbd5e1;border-radius:8px}@media(max-width:600px){header,section{padding:20px}.wrap{padding:14px}}
+/* Selection actions: highlight and annotation are visually distinct */
+.annotation-mark{display:inline;border-radius:2px;padding:0;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.annotation-highlight{background:#ffe89a!important;color:inherit!important;text-decoration:none!important;box-shadow:none!important;cursor:inherit}
+.annotation-underline{background:transparent!important;color:inherit!important;text-decoration:underline!important;text-decoration-color:#2563eb!important;text-decoration-thickness:1.5px!important;text-underline-offset:3px!important;cursor:pointer}
+.annotation-underline:hover{text-decoration-thickness:2px!important}
+.annotation-ui{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:#172033}
+.annotation-toolbar{position:fixed;z-index:99999;display:none;align-items:center;gap:6px;padding:6px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.2);width:max-content;max-width:calc(100vw - 16px)}
+.annotation-toolbar button{border:1px solid #d0d5dd;background:#fff;border-radius:8px;padding:7px 11px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;line-height:1.3;white-space:nowrap}
+.annotation-toolbar #makeHighlight{background:#fff4c2;border-color:#e6c65c}
+.annotation-toolbar #makeAnnotation{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+#annotationToolbarStatus{font-size:11px;color:#b45309;max-width:180px}
+#annotationEditor,#annotationBubble{position:fixed;z-index:99998;display:none;right:18px;bottom:18px;width:min(360px,calc(100vw - 36px));background:#fff;border:1px solid #dbe3ef;border-radius:16px;padding:15px;box-shadow:0 16px 45px rgba(15,23,42,.2)}
+#annotationEditor h3,#annotationBubble h3{font-size:15px;margin:0 0 8px}
+#annotationEditor textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #d0d5dd;border-radius:10px;padding:10px;font:14px/1.6 inherit;outline:none}
+#annotationEditor textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px #dbeafe}
+.annotation-buttons{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.annotation-buttons button{border:1px solid #d0d5dd;background:#fff;border-radius:9px;padding:7px 11px;cursor:pointer;font:inherit}
+.annotation-buttons .primary{background:#2563eb;border-color:#2563eb;color:#fff}
+#annotationBubble .quote{font-size:12px;color:#64748b;background:#f8fafc;padding:8px;border-radius:8px;margin:8px 0;max-height:72px;overflow:auto}
+#annotationBubble .note-body{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:650px){#annotationEditor,#annotationBubble{right:10px;bottom:10px;width:calc(100vw - 20px)}}
+.cluster-comparison{margin:18px 0}.cluster-comparison img{display:block;width:100%;max-width:758px;height:auto;margin:0 auto}.cluster-comparison figcaption{margin-top:6px;color:#64748b;font-size:14px;text-align:center}
+</style><link rel="stylesheet" href="annotations.css">
+</head><body data-study-day="6"><div class="wrap">
+<header><span class="pill">DAY 6 · 第五章</span><h1>从文本聚类到主题建模：BERTopic</h1><p>《图解大模型》 · 5.3—5.3.1</p><small>原书第122—128页，图5-9至图5-17</small></header>
+<section><h2>01｜为什么聚类后还要主题建模？</h2><p>Day 5 的 HDBSCAN 为相似的论文生成簇0、簇1等标签，但数字无法解释每组文档具体讨论什么。原书在第122页以手语翻译相关文档为例：我们不仅希望找到一组类似的论文，还希望用“手势”“语言”“翻译”等关键词描述该组的主题。</p><div class="call"><b>区别：</b>聚类解决“哪些文档应该分在一起”，主题建模进一步解决“这组文档在讨论什么”。主题表示可以是关键词或短语，不必只有一个名称。</div></section>
+<section><h2>02｜图5-9和图5-10：主题表示</h2><p>原书用宠物、食物和体育的文档组演示主题表示：宠物组的词可能是 dog、cat、pet；食物组是 pasta、pizza、cooking；体育组是 soccer、basketball、athletes。不同主题中的词具有不同权重，权重较高的词更能代表对应主题。</p><p>经典主题模型如 LDA 往往通过词袋等方法统计词语分布；本章先利用 Transformer 嵌入向量进行语义聚类，再结合词袋统计和词语加权建立主题表示。两者各自解决不同的问题。</p></section>
+<section><h2>03｜BERTopic 是怎样工作的？（图5-11～图5-16）</h2>
+<div class="flow"><div class="step"><b>1. 嵌入文档</b><br>SBERT等</div><div class="arrow">→</div><div class="step"><b>2. 向量降维</b><br>UMAP</div><div class="arrow">→</div><div class="step"><b>3. 文档聚类</b><br>HDBSCAN</div></div>
+<div class="flow" style="margin-top:14px"><div class="step"><b>4. 统计词频</b><br>CountVectorizer</div><div class="arrow">→</div><div class="step"><b>5. 给词加权</b><br>c-TF-IDF</div><div class="arrow">→</div><div class="step"><b>输出</b><br>每组的主题关键词</div></div>
+<p>这是原书第126页图5-16的主线。第一部分从语义角度把文章分组，第二部分从词语统计角度提取每组的代表词。书中强调 BERTopic 的模块化优势，前面使用的嵌入、降维或聚类算法都可以替换。</p></section>
+<section><h2>04｜为什么需要 CountVectorizer？</h2><p>嵌入向量能够帮助机器理解文档之间的语义相似性，但384维或5维向量通常不会直接告诉我们哪一维代表“翻译”。因此原书引入词袋：使用 <code>CountVectorizer</code> 来统计词语出现的次数。</p><p>原书图5-12先说明文档级词频，图5-13进一步指出：<b>主题建模应该统计整个簇中的词，而不仅是一篇文章中的词。</b></p>
+<table><thead><tr><th>示意文档</th><th>内容</th></tr></thead><tbody><tr><td>文章A</td><td>手语 翻译 模型</td></tr><tr><td>文章B</td><td>手语 识别 手势</td></tr><tr><td>文章C</td><td>手语 翻译 手势</td></tr></tbody></table>
+<p>把这三篇当成同一个簇来统计，“手语”出现3次，“翻译”出现2次，“手势”出现2次。这个小例子是辅助理解，并非书中真实数据。</p></section>
+<section><h2>05｜c-TF-IDF 为什么比单纯词频更有用？</h2><p>原书第125页指出，the、I等停用词在大量文档中很常见，但通常不具有鲜明的主题意义。c-TF-IDF通过两个信息计算词权重：一个词在当前簇中出现得多不多，以及它是否也广泛出现在其他簇中。</p>
+<div class="call good"><b>直观例子：</b>如果“手语”在某个簇中大量出现，而在其他簇中不常见，它比“model”这种在很多研究主题中都出现的词更具代表性。</div>
+<p>原书图5-14的IDF部分为：</p>
+<pre><code>IDF(x) = log(A / cf_x + 1)</code></pre>
+<p>其中 <code>A</code> 表示所有簇中的平均词语数量，<code>cf_x</code> 表示词 x 在所有簇中的总频次，log使用自然对数。再与该词在当前簇中的c-TF相乘：</p>
+<pre><code>c-TF-IDF(x,c) = c-TF(x,c) × log(A / cf_x + 1)</code></pre>
+<p>最终为每个簇中的词排序，选取权重较高的词构成主题表示。这里的权重并不是分类正确率，也不是注意力权重。</p></section>
+<section><h2>06｜原书代码：创建 BERTopic</h2>
+<pre><code>from bertopic import BERTopic
+
+topic_model = BERTopic(
+    embedding_model=embedding_model,
+    umap_model=umap_model,
+    hdbscan_model=hdbscan_model,
+    verbose=True
+).fit(abstracts, embeddings)
+
+topic_model.get_topic_info()</code></pre>
+<p>上述代码复用此前准备好的嵌入模型、UMAP模型、HDBSCAN模型和论文摘要。<code>fit(abstracts, embeddings)</code> 执行主题建模流程，<code>get_topic_info()</code> 输出主题概览。</p>
+<table><thead><tr><th>Topic</th><th>Count</th><th>书中主题关键词示例</th></tr></thead><tbody>
+<tr><td>-1</td><td>14520</td><td>the, of, and, to...</td></tr><tr><td>0</td><td>2290</td><td>speech, asr, recognition...</td></tr><tr><td>1</td><td>1403</td><td>medical, clinical, biomedical...</td></tr><tr><td>2</td><td>1156</td><td>sentiment, aspect, analysis...</td></tr><tr><td>3</td><td>986</td><td>translation, nmt, machine...</td></tr></tbody></table>
+<div class="call warn"><b>注意：</b>书中 -1 代表未能归入某个常规主题的离群文档，不宜把它当成一般主题来解释。</div></section>
+<section><h2>07｜get_topic(0) 返回什么？</h2>
+<pre><code>topic_model.get_topic(0)
+
+[
+  ('speech', 0.028177697715245358),
+  ('asr', 0.018971184497453525),
+  ('recognition', 0.013457745472471012),
+  ('end', 0.00980445092749381),
+  ('acoustic', 0.009452082794507863)
+]</code></pre>
+<p>输出的每个元素都包含一个词和它在该主题中的代表性权重。例如“speech”对应的数字说明它对主题0的表示有多重要，而不是“这篇文章属于主题0的概率”。</p></section>
+<section><h2>08｜今日总结</h2><p><b>完整流程：</b>文档嵌入 → 降维 → 语义聚类 → 统计簇内词频 → c-TF-IDF加权 → 主题关键词。</p><p>这种设计有一个优势：我们可以替换其中的不同模块，而不必从零设计整个主题建模系统。原书用“乐高积木”形容这种模块化。</p></section>
+<section><h2>09｜自测（点击查看）</h2>
+<details><summary>1. 为什么有了语义嵌入，还要重新统计词频？</summary><p>语义嵌入主要用于发现相似文档，词频加权用于提取人可以理解的主题关键词。</p></details>
+<details><summary>2. 为什么主题表示不能只用出现次数最多的词？</summary><p>一些词在所有主题中都非常常见，缺乏区分度。c-TF-IDF会考虑词在全体簇中的频次。</p></details>
+<details><summary>3. BERTopic流程分哪两个部分？</summary><p>第一部分嵌入、降维、聚类；第二部分CountVectorizer词频统计和c-TF-IDF加权。</p></details>
+<details><summary>4. get_topic(0) 返回的数字是预测概率吗？</summary><p>不是，是词在对应主题中的表示权重。</p></details></section>
+<section><h2>高亮与批注</h2><p class="muted">选中原文后，可以选择纯背景色的“高亮”或只显示下划线的“批注”。标记不会修改正文DOM结构。</p></section>
+<small>依据《图解大模型》第122–128页、图5-9至图5-17整理；中文示例另有注明。</small>
+</div><script src="annotations.js"></script></body></html>
