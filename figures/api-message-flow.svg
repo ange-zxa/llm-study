@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 290" width="940" height="290" role="img"><defs><style>.t{font:16px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#172033}.s{font:13px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#667085}.h{font:bold 20px 'PingFang SC','Microsoft YaHei',Arial,sans-serif;fill:#172033}.a{stroke:#94a3b8;stroke-width:2.3;fill:none;marker-end:url(#arrow)}</style><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0L8 3L0 6" fill="#94a3b8"/></marker></defs><rect width="940" height="290" fill="#fbfdff"/>
+<text class="h" x="25" y="36">prompt模板不是messages列表：它们位于不同层次</text>
+<rect x="25" y="70" rx="13" width="262" height="168" fill="#e0f2fe" stroke="#93c5fd"/><text class="t" x="43" y="103" font-weight="bold">Python中的字符串</text>
+<text class="s" x="43" y="139">prompt = “判断影评...”</text><text class="s" x="43" y="169">document = “非常精彩”</text>
+<text class="s" x="43" y="209">replace() 生成完整任务</text>
+<path class="a" d="M292 155H330"/>
+<rect x="344" y="70" rx="13" width="250" height="168" fill="#ede9fe" stroke="#a5b4fc"/><text class="t" x="363" y="103" font-weight="bold">messages列表</text>
+<text class="s" x="363" y="142">role: system</text><text class="s" x="363" y="166">content: 设定行为</text>
+<text class="s" x="363" y="194">role: user</text><text class="s" x="363" y="217">content: 分类任务 + 影评</text>
+<path class="a" d="M599 155H637"/>
+<rect x="650" y="70" rx="13" width="264" height="168" fill="#dcfce7" stroke="#86efac"/><text class="t" x="674" y="106" font-weight="bold">Chat Completions API</text><text class="s" x="674" y="150">客户端发送messages</text><text class="s" x="674" y="184">模型生成字符串 “1”</text><text class="s" x="674" y="212">int(“1”) → 标签 1</text>
+<text class="s" x="25" y="270">示意：定义变量、替换占位符本身不会发起API调用。</text></svg>
