@@ -48,8 +48,6 @@ embeddings = embedding_model.encode(
 <section><h2>05｜关键结果：为什么是 (44949, 384)？</h2><pre><code>embeddings.shape
 (44949, 384)</code></pre><p>这表示嵌入结果是一个二维矩阵：</p><table><tr><th>维度</th><th>含义</th></tr><tr><td>44,949 行</td><td>对应 44,949 篇文章摘要，每行一个文档向量</td></tr><tr><td>384 列</td><td>每个文档向量包含 384 个数值</td></tr></table><p>可以把它想成一张表：每一行是一篇文章，每一列是这个向量的一个特征维度。注意，384 个数值不是 384 个词，也不是 384 篇文章；它们共同构成这一篇文档的语义表示。</p><div class="call good"><b>关键连接：</b>你之前学过句子嵌入和余弦相似度。这里把每篇文章摘要编码成向量后，就能用向量间的距离或相似度来比较文档，为下一步降维和聚类准备输入。</div></section>
 <section><h2>06｜自测</h2><details><summary>1. 为什么使用摘要而不是直接对文章编号聚类？</summary><p>文章编号只用于标识，不表达文章讨论的语义内容。摘要包含文本内容，嵌入模型才能据此形成语义表示。</p></details><details><summary>2. 44,949 × 384 分别代表什么？</summary><p>44,949 篇摘要，每篇摘要对应一个 384 维向量。</p></details><details><summary>3. 为什么要选择语义相似度表现较好的嵌入模型？</summary><p>聚类的目标是发现语义相似的文档组，嵌入向量应尽量保留文本语义关系。</p></details><details><summary>4. embedding model 和 cluster model 是一回事吗？</summary><p>不是。嵌入模型负责把文档变成向量；聚类模型负责根据向量之间的关系形成簇。</p></details></section>
-<section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
-<small>依据用户提供的《图解大模型：生成式 AI 原理与实战》第115–116页整理。概念解释是辅助理解，未将书外方法替换为原书内容。</small>
 <section class="study-longread" id="expanded-day3"><div class="kicker">加深讲解 · 原书第115—116页</div><h2>一、从原始论文到语义矩阵</h2>
 <figure><img src="figures/embedding-matrix.svg" alt="一篇文章被编码为384维向量，所有文章形成二维矩阵"><figcaption>教学重绘：论文摘要通过文本嵌入模型变为一个数值向量。</figcaption></figure>
 <p>书中的数据集包含44,949篇 ArXiv cs.CL 文章摘要。<code>abstracts</code> 是摘要列表；<code>titles</code> 是对应的标题列表。前者用于编码语义，后者方便在后面查看、展示聚类结果。</p>
@@ -79,6 +77,9 @@ print(embeddings.shape)
 <h2>四、聚类为何要先有向量？</h2><p>传统距离和聚类算法处理的是可计算的数值对象。文本本身不方便直接使用这些算法，因此先转为数值向量。如果语义关系保留得较好，讨论相近主题的论文在向量空间里就更有希望靠近；下一步才考虑将这些高维向量降到较低维度。</p>
 <details><summary>自测：为什么 384 不表示每篇摘要恰好有384个词？</summary><p>384是 gte-small 生成的固定向量维数，与原文词数不同；长短不同的摘要都可以获得同维度表示。</p></details>
 </section>
+<section><h2>个人批注</h2><p class="muted">选中正文文字后，可选择「高亮」或「添加批注」：高亮只显示底色；批注显示下划线，点击下划线可查看批注。</p></section>
+<small>依据用户提供的《图解大模型：生成式 AI 原理与实战》第115–116页整理。概念解释是辅助理解，未将书外方法替换为原书内容。</small>
+
 </div>
 
 
