@@ -39,7 +39,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
 <div class="app">
 <aside>
   <div class="brand"><div class="eyebrow">ILLUSTRATED SELF-STUDY LIBRARY</div><h1>图解大模型<br>详细自学课堂</h1><p>按教材章节顺序讲解：先理解概念与原理，再看图、公式、代码、例题和自测。新增配图均注明是教学重绘，不冒充教材原图。</p></div>
-  <div class="progress"><div class="progress-top"><span>已整理课程</span><span>6 篇详细笔记</span></div><div style="font-size:11px;color:#667085;margin-top:8px">Day 1–6 都已经补充详细解释和知识图解；后续继续按教材章节推进。</div></div>
+  <div class="progress"><div class="progress-top"><span>已整理课程</span><span>7 篇详细笔记</span></div><div style="font-size:11px;color:#667085;margin-top:8px">Day 1–7 已补充详细解释、教材原图和知识图解；后续继续按教材章节推进。</div></div>
   <div class="group-title">第 4 章 · 文本分类</div>
   <div class="nav-list">
     <button class="nav active" data-day="1"><span class="num">01</span><span class="nav-text"><strong>使用 ChatGPT 进行文本分类</strong><small>API、提示词、批量预测</small></span><span class="status">已完成</span></button>
@@ -51,7 +51,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100vh}.topbar{height:
     <button class="nav" data-day="4"><span class="num">04</span><span class="nav-text"><strong>嵌入向量降维</strong><small>5.2.2 · UMAP 与 PCA</small></span><span class="status">已完成</span></button>
     <button class="nav" data-day="5"><span class="num">05</span><span class="nav-text"><strong>向量聚类与簇检查</strong><small>5.2.3–5.2.4 · HDBSCAN</small></span><span class="status">已完成</span></button>
     <button class="nav" data-day="6"><span class="num">06</span><span class="nav-text"><strong>从聚类到主题建模</strong><small>5.3–5.3.1 · BERTopic、c-TF-IDF</small></span><span class="status">已完成</span></button>
-    <button class="nav" data-day="7"><span class="num">07</span><span class="nav-text"><strong>BERTopic 表示模块</strong><small>5.3.2 · 下一次学习</small></span></button>
+    <button class="nav" data-day="7"><span class="num">07</span><span class="nav-text"><strong>BERTopic 表示模块</strong><small>5.3.2 · KeyBERTInspired、MMR</small></span><span class="status">已完成</span></button>
   </div>
   <div class="group-title">教材原图 · 独立图册</div>
   <div class="nav-list"><a href="教材原图对照学习.html" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:#1d4ed8;padding:11px 12px;border:1px solid #bfdbfe;border-radius:11px;background:#eff6ff;margin-bottom:12px;font-size:13px;font-weight:700">查看原书图4-22、4-23及图5-1至5-17（19张）</a></div>
@@ -428,6 +428,10 @@ function loadDay(d){
     frame.style.display='block';empty.style.display='none';
     frame.removeAttribute('srcdoc');frame.src='day6.html?v=topic-figures';
     crumb.textContent='学习笔记 / Day 6 / BERTopic 与 c-TF-IDF';
+  }else if(d==='7'){
+    frame.style.display='block';empty.style.display='none';
+    frame.removeAttribute('srcdoc');frame.src='day7.html?v=representation-modules';
+    crumb.textContent='学习笔记 / Day 7 / BERTopic 表示模块：KeyBERTInspired 与 MMR';
   }else{
     frame.style.display='none';empty.style.display='flex';
     document.getElementById('emptyTitle').textContent='Day '+d+' · 内容待更新';
